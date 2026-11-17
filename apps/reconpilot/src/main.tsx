@@ -4,11 +4,13 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import { AuthProvider, RequireAuth } from "./lib/auth";
 import { ToastProvider } from "./lib/toast";
 import { AppShell } from "./components/AppShell";
+import { Assistant } from "./components/Assistant";
 import Landing from "./pages/Landing";
 import AuthPage from "./pages/AuthPage";
 import "./styles/base.css";
 import "./styles/landing.css";
 import "./styles/app.css";
+import "./styles/assistant.css";
 
 const Overview = lazy(() => import("./pages/Overview"));
 const Runs = lazy(() => import("./pages/Runs"));
@@ -73,6 +75,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <Assistant />
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

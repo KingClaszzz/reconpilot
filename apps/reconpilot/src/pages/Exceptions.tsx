@@ -5,6 +5,7 @@ import { formatIDR } from "../format";
 import { store } from "../lib/store";
 import { atStake, type Item, type Run } from "../lib/types";
 import { CountUp, Reveal } from "../lib/motion";
+import { usePageContext } from "../lib/assistant-context";
 import { ItemPanel } from "../components/ItemPanel";
 import { ItemsTable } from "../components/ItemsTable";
 import { Empty, Icon, PageHead } from "../components/ui";
@@ -44,6 +45,11 @@ export default function Exceptions() {
     { label: "Over 30 days", n: open.filter((i) => age(i) > 30).length },
   ];
   const total = open.reduce((t, i) => t + atStake(i), 0);
+  usePageContext(
+    items
+      ? [`Exception queue: ${open.length} open, ${formatIDR(total)} at stake.`, ...list.slice(0, 25).map((i) => `${i.ref} | ${STATUS_LABEL[i.status]} | ${runs.get(i.run_id)?.name ?? ""} | at stake ${formatIDR(atStake(i))} | ${age(i)} days old`)].join("\n")
+      : null,
+  );
 
   return (
     <div className="page">
