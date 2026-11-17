@@ -30,16 +30,24 @@ export function Icon({ name, size = 18 }: { name: keyof typeof PATHS | string; s
   );
 }
 
-export function Logo({ compact = false }: { compact?: boolean }) {
+export function Logo({ compact = false, height = 24 }: { compact?: boolean; height?: number }) {
   return (
     <span className="logo">
-      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden>
-        <rect x="1" y="1" width="30" height="30" rx="7" fill="var(--ink)" />
-        <path d="M8 11h9M8 16h6M8 21h9" stroke="var(--paper)" strokeWidth="2.2" strokeLinecap="round" />
-        <path d="M18.5 17.5l3 3 5-7" stroke="var(--accent-bright)" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      {!compact && <span className="logo-word">ReconPilot</span>}
+      {compact ? (
+        <img src="/brand/mark.png" alt="ReconPilot" width={height} height={height} />
+      ) : (
+        <img src="/brand/wordmark.png" alt="ReconPilot" height={height} width={Math.round(height * 6.17)} />
+      )}
     </span>
+  );
+}
+
+export function Mascot({ className = "", size = 160, eager = false }: { className?: string; size?: number; eager?: boolean }) {
+  return (
+    <picture className={`mascot ${className}`}>
+      <source srcSet="/brand/mascot.webp" type="image/webp" />
+      <img src="/brand/mascot.png" alt="" width={size} height={Math.round(size * 1.17)} loading={eager ? "eager" : "lazy"} decoding="async" />
+    </picture>
   );
 }
 
@@ -97,11 +105,7 @@ export function RunStatusChip({ s }: { s: RunStatus }) {
 export function Empty({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="empty">
-      <div className="empty-art" aria-hidden>
-        <span />
-        <span />
-        <span />
-      </div>
+      <Mascot className="empty-mascot" size={110} />
       <h3>{title}</h3>
       {children && <p>{children}</p>}
       {action}

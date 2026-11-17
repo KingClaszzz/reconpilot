@@ -71,7 +71,7 @@
 .crosshair { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
 .trend rect:focus { outline: none; }
 .chart-tip { position: absolute; transform: translate(-50%, calc(-100% - 14px)); display: grid; gap: 2px; padding: 8px 11px; border-radius: 9px; background: var(--ink); color: var(--paper); font-size: 12.5px; white-space: nowrap; pointer-events: none; z-index: 3; }
-.chart-tip .muted { color: #a9a8a2; }
+.chart-tip .muted { color: #9fb0c8; }
 .barlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
 .barlist li { display: grid; grid-template-columns: 128px minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; gap: 2px 12px; }
 .barlist-label { font-size: 13.5px; }
@@ -185,9 +185,9 @@
 
 .confirm { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; padding: 18px 20px; border-radius: var(--r-lg); background: var(--ink); color: var(--paper); animation: rise 0.3s var(--ease) both; }
 .confirm h3 { font-size: 17px; margin-bottom: 4px; }
-.confirm p { color: #bdbbb4; font-size: 14px; max-width: 60ch; }
+.confirm p { color: #b6c3d6; font-size: 14px; max-width: 60ch; }
 .confirm-actions { display: flex; gap: 8px; }
-.confirm .btn.ghost { background: transparent; color: var(--paper); border-color: #55565b; }
+.confirm .btn.ghost { background: transparent; color: var(--paper); border-color: #3a4a63; }
 .confirm .btn.primary { background: var(--accent); }
 .danger-zone { text-align: right; }
 

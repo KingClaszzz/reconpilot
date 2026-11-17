@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../lib/auth";
 import { store } from "../lib/store";
 import { errMsg } from "../lib/toast";
-import { Logo } from "../components/ui";
+import { Logo, Mascot } from "../components/ui";
 import { Decode } from "../lib/motion";
 import { DemoButton } from "./Landing";
 
@@ -83,6 +83,7 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
             <p key={i} style={{ animationDelay: `${i * 120}ms` }}>{l}</p>
           ))}
         </div>
+        <Mascot className="auth-mascot" size={150} />
         <div className="auth-note">
           <p>Month-end shouldn’t be two days of VLOOKUP.</p>
           <span>ReconPilot turns two exports into a short list of lines that need a person, each closed with a note.</span>
