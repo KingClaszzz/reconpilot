@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { useAuth } from "../lib/auth";
 import { errMsg, useToast } from "../lib/toast";
 import { CountUp, Decode, Reveal, reducedMotion, useInView } from "../lib/motion";
-import { Icon, Logo } from "../components/ui";
+import { Icon, Logo, Mascot } from "../components/ui";
 
 export function DemoButton({ className = "btn primary lg", label = "Try the live demo" }: { className?: string; label?: string }) {
   const { startDemo } = useAuth();
@@ -129,7 +129,9 @@ function Machine() {
   const review = LINES.slice(0, Math.max(0, done)).filter((l) => l.v !== "ok").length;
   const matched = Math.max(0, done) - review;
 
+  const finished = step >= LINES.length;
   return (
+    <div className="machine-wrap">
     <div ref={ref} className="machine" aria-label="Animated example: bank lines matched against ERP lines">
       <div className="machine-head">
         <span><i className="led" /> mutasi_bca_nov.csv</span>
@@ -154,7 +156,14 @@ function Machine() {
       <div className="machine-foot">
         <span><b>{matched}</b> matched</span>
         <span><b className="warn-ink">{review}</b> need a person</span>
-        <span className="muted">{step >= LINES.length ? "done" : "matching…"}</span>
+        <span className="muted">{finished ? "done" : "matching…"}</span>
+      </div>
+    </div>
+      <span className={`bubble ${finished ? "cheer" : ""}`} key={finished ? "done" : "busy"} aria-hidden>
+        {finished ? `Done. Only ${review} need you.` : "Checking every line…"}
+      </span>
+      <div className={`buddy ${finished ? "cheer" : ""}`} aria-hidden>
+        <Mascot size={118} eager />
       </div>
     </div>
   );
@@ -350,6 +359,7 @@ export default function Landing() {
 
       <section className="section final">
         <div className="wrap final-in">
+          <Mascot className="final-mascot" size={140} />
           <h2>See November reconciled in a minute.</h2>
           <p>The demo workspace has two bank accounts and three months of history. Nothing to install.</p>
           <div className="hero-cta">
