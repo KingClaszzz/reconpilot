@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+# kane-gate runtime state (specs are committed, runs are not)
+.kane/runs/
+.kane/state/
+.kane/report.html
+.testmuai/
+.env.local
+*.local

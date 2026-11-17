@@ -1,0 +1,7 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "startCommand": "npm run dev",
+  "specsDir": ".kane/specs",
+  "maxAttempts": 3,
+  "headless": true
+}

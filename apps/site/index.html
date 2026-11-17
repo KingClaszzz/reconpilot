@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>kane-gate</title>
+    <meta name="description" content="A Claude Code Stop hook that won't let your AI coding agent finish until Kane CLI has tested the change in a real browser." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230e1217'/><rect x='6' y='8' width='4' height='18' rx='1' fill='%23f5c000'/><rect x='9' y='12' width='18' height='5' rx='1.5' fill='%23f5c000'/></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="logo" href="#top" aria-label="kane-gate home">
+          <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor"/><rect x="6" y="8" width="4" height="18" rx="1" fill="var(--hazard)"/><rect x="9" y="12" width="18" height="5" rx="1.5" fill="var(--hazard)"/></svg>
+          kane-gate
+        </a>
+        <nav aria-label="Sections">
+          <a href="#loop">The loop</a>
+          <a href="#message">What the agent reads</a>
+          <a href="#proof">Proof</a>
+          <a href="#install">Install</a>
+        </nav>
+        <a class="nav-cta" data-link="repo" href="#install">GitHub</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- HERO -->
+      <section class="hero band">
+        <div class="inner hero-grid">
+          <div>
+            <p class="kicker">A Claude Code Stop hook, powered by Kane CLI</p>
+            <h1>Your agent says <em>done</em>. Kane checks first.</h1>
+          </div>
+          <div class="hero-side">
+            <p class="lede">
+              kane-gate won't let your AI coding agent end its turn until Kane CLI has clicked through the change in a real browser.
+              If a check fails, the agent gets Kane's findings and keeps working.
+            </p>
+            <div class="install-line">
+              <code id="cmd-init">npx kane-gate init</code>
+              <button class="copy" type="button" data-copy="npx kane-gate init" aria-label="Copy install command">Copy</button>
+            </div>
+            <p class="fine">Works with any web app. Needs <a href="https://www.testmuai.com/support/docs/kane-cli-introduction" target="_blank" rel="noopener">Kane CLI</a> and Claude Code.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PLAYER -->
+      <section id="loop" class="band player-band" aria-labelledby="loop-title">
+        <div class="inner">
+          <div class="player-head">
+            <h2 id="loop-title">One turn, gated</h2>
+            <p>Replay on ReconPilot, our demo reconciliation app. Kane's steps and numbers are from a real run; the agent's messages are shortened.</p>
+          </div>
+
+          <div class="player" id="player" data-step="0">
+            <div class="gate" aria-hidden="true">
+              <svg class="gate-svg" viewBox="0 0 1000 64" preserveAspectRatio="xMinYMid meet">
+                <defs>
+                  <pattern id="hazard" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <rect width="14" height="28" fill="var(--hazard)" />
+                    <rect x="14" width="14" height="28" fill="var(--hazard-ink)" />
+                  </pattern>
+                </defs>
+                <line class="lane" x1="48" y1="60" x2="1000" y2="60" stroke="var(--rule)" stroke-width="2" stroke-dasharray="14 10" />
+                <rect x="14" y="10" width="20" height="54" rx="3" fill="var(--ink)" />
+                <circle class="lamp" cx="24" cy="22" r="6" />
+                <g class="arm">
+                  <rect x="24" y="30" width="960" height="16" rx="8" fill="url(#hazard)" />
+                  <rect x="24" y="30" width="960" height="16" rx="8" fill="none" stroke="var(--ink)" stroke-width="2" />
+                </g>
+              </svg>
+              <p class="gate-status" id="gate-status">Waiting for the agent</p>
+            </div>
+
+            <div class="panes">
+              <section class="pane pane-agent" aria-label="Claude Code session">
+                <header><span class="dot"></span>Claude Code</header>
+                <div class="pane-body" id="pane-agent"></div>
+              </section>
+              <section class="pane pane-kane" aria-label="kane-gate live feed">
+                <header><span class="dot"></span>kane-gate watch</header>
+                <div class="pane-body mono" id="pane-kane"></div>
+              </section>
+              <section class="pane pane-browser" aria-label="Browser driven by Kane">
+                <header><span class="dot"></span><span class="url">localhost:5173</span></header>
+                <div class="pane-body" id="pane-browser"></div>
+              </section>
+            </div>
+
+            <div class="controls">
+              <button type="button" class="play" id="play" aria-label="Pause replay">
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path class="i-pause" d="M6 4h3v12H6zM11 4h3v12h-3z"/><path class="i-play" d="M6 4l10 6-10 6z"/></svg>
+              </button>
+              <ol class="steps" id="steps" role="tablist" aria-label="Replay steps"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MESSAGE -->
+      <section id="message" class="band" aria-labelledby="msg-title">
+        <div class="inner split">
+          <div class="section-head sticky">
+            <h2 id="msg-title">What the agent reads when the gate stays shut</h2>
+            <p>
+              The Stop hook answers Claude Code with <code>{"decision":"block"}</code> and a reason. That reason is written for a model to act on, built from Kane's own run:
+            </p>
+            <ul class="notes">
+              <li><b>Expected vs. observed</b> for every failed check, so the agent fixes the cause instead of guessing.</li>
+              <li><b>The failed step and the evidence pack</b>, so you can replay exactly what Kane saw.</li>
+              <li><b>A standing rule:</b> fix the application, not the spec. Kane's own summary sometimes suggests changing the test; the agent is told to ignore that.</li>
+            </ul>
+          </div>
+          <figure class="message">
+            <figcaption><span class="pill fail">blocked</span> Real output from kane-gate · round 1 of 3</figcaption>
+<pre><code><span class="t-h">kane-gate: Kane CLI tested your change in a real browser and 2 of 2 spec(s) FAILED. You are not done yet.</span>
+
+<span class="t-x">✗ Reconcile sample files — summary counts</span>  <span class="t-d">[.kane/specs/reconcile-summary.md]</span>
+  What Kane saw: the summary totals do not match the required results.
+  Failed step: assert: the summary cards show exactly these numbers…
+  Check "Matched card shows exactly 39": <mark>expected "39", observed "0"</mark>
+  Check "Amount mismatch card shows exactly 3": <mark>expected "3", observed "34"</mark>
+  Check "Only in Bank card shows exactly 2": <mark>expected "2", observed "10"</mark>
+  Check "Only in ERP card shows exactly 3": <mark>expected "3", observed "11"</mark>
+
+<span class="t-x">✗ Amount mismatch row shows correct dates and difference</span>
+  What Kane saw: INV-1007 shows a missing bank date and a large negative
+  difference instead of the expected dates and Rp 50.000,00 difference.
+  Check "Bank date is 22 Nov 2026": <mark>expected "22 Nov 2026", observed "—"</mark>
+  Check "Difference is Rp 50.000,00": <mark>expected "Rp 50.000,00", observed "-Rp 874.075,00"</mark>
+  Evidence: <span class="t-d">kane-cli evidence serve ~/.testmuai/kaneai/sessions/db5e…/c986….evidence</span>
+
+<span class="t-h">What to do:</span>
+1. Treat each spec as the source of truth. Fix the APPLICATION code, not the spec.
+2. Find the root cause rather than special-casing the values above.
+3. When the fix is in, finish your turn normally. kane-gate will re-run Kane.</code></pre>
+          </figure>
+        </div>
+      </section>
+
+      <!-- HOW -->
+      <section class="band how" aria-labelledby="how-title">
+        <div class="inner">
+          <div class="section-head">
+            <h2 id="how-title">How the gate decides</h2>
+            <p>Every time Claude tries to end a turn, Claude Code runs the Stop hook. kane-gate then takes these steps, in order.</p>
+          </div>
+          <ol class="flow">
+            <li>
+              <h3>Skip what's already proven</h3>
+              <p>If the working tree hasn't changed since the last green run, the agent may stop at once. No credits spent.</p>
+            </li>
+            <li>
+              <h3>Make sure the app is up</h3>
+              <p>kane-gate checks <code>baseUrl</code> and runs your <code>startCommand</code> if nothing answers, then waits up to 60 seconds.</p>
+            </li>
+            <li>
+              <h3>Run every spec through Kane</h3>
+              <p><code>kane-cli run --agent</code> per spec, in a real Chrome. kane-gate reads Kane's NDJSON stream as it goes.</p>
+            </li>
+            <li class="fork">
+              <h3>Open, or send it back</h3>
+              <p><span class="pill pass">all pass</span> the turn ends and you see <code>✓ 2/2 specs verified</code>.</p>
+              <p><span class="pill fail">any fail</span> the stop is blocked and Kane's findings become the agent's next instruction. After three rounds it stops and tells you what is still red.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- GUARDRAILS + SPEC -->
+      <section class="band" aria-labelledby="daily-title">
+        <div class="inner split">
+          <div>
+            <div class="section-head">
+              <h2 id="daily-title">Safe to leave on</h2>
+              <p>A gate you switch off after a day is no gate. These are the parts that make it livable.</p>
+            </div>
+            <dl class="rails">
+              <div><dt>Flaky browser, not a bug</dt><dd>Tooling errors such as <code>TargetClosedError</code> are retried once and never reported to the agent as app failures. We hit this on day one.</dd></div>
+              <div><dt>Specs can't be quietly weakened</dt><dd>kane-gate remembers each spec when it first fails. If the agent edits one mid-fix, the next message says so.</dd></div>
+              <div><dt>Credits stay predictable</dt><dd>One Kane run costs about 12–25 credits here. An unchanged tree is never re-verified, and specs run one at a time.</dd></div>
+              <div><dt>Never wedges your session</dt><dd>If kane-gate itself crashes, the hook exits cleanly and the agent can stop. You keep control.</dd></div>
+            </dl>
+          </div>
+          <div class="spec-card">
+            <div class="tabs" role="tablist" aria-label="Files kane-gate uses">
+              <button role="tab" id="tab-spec" aria-selected="true" aria-controls="panel-spec">.kane/specs/reconcile-summary.md</button>
+              <button role="tab" id="tab-config" aria-selected="false" aria-controls="panel-config" tabindex="-1">kane-gate.config.json</button>
+              <button role="tab" id="tab-hook" aria-selected="false" aria-controls="panel-hook" tabindex="-1">.claude/settings.json</button>
+            </div>
+<pre role="tabpanel" id="panel-spec" aria-labelledby="tab-spec"><code><span class="t-d">---
+name: Reconcile sample files — summary counts
+url: /
+---</span>
+Click the "Load sample data" button.
+Then click the "Reconcile" button.
+Verify the summary cards show exactly these numbers:
+- Matched: 39
+- Amount mismatch: 3
+- Only in Bank: 2
+- Only in ERP: 3
+- Duplicate: 2</code></pre>
+<pre role="tabpanel" id="panel-config" aria-labelledby="tab-config" hidden><code>{
+  "baseUrl": "http://localhost:5173",
+  "startCommand": "npm run dev",
+  "specsDir": ".kane/specs",
+  "maxAttempts": 3,
+  "headless": true
+}</code></pre>
+<pre role="tabpanel" id="panel-hook" aria-labelledby="tab-hook" hidden><code>{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "npx --no-install kane-gate hook",
+        "timeout": 1800
+      }]
+    }]
+  }
+}</code></pre>
+            <p class="spec-note">Specs are plain English. <code>init</code> also adds a rule to <code>CLAUDE.md</code>: write the spec before the code.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROOF -->
+      <section id="proof" class="band proof" aria-labelledby="proof-title">
+        <div class="inner">
+          <div class="section-head">
+            <h2 id="proof-title">Three bugs the unit tests waved through</h2>
+            <p>We planted realistic bugs in ReconPilot's parser for the Indonesian bank export. The unit tests an agent would write first still passed. Kane didn't.</p>
+          </div>
+          <div class="scoreboard">
+            <div><span class="pill pass">3 / 3 passed</span><span>Unit tests</span></div>
+            <div><span class="pill fail">2 / 2 failed</span><span>Kane in a real browser</span></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th scope="col">Bug</th><th scope="col">Bank export says</th><th scope="col">App showed</th><th scope="col">Kane expected</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Thousands separators ignored</td><td class="mono">1.625.000,00</td><td class="mono bad">Matched 0, Amount mismatch 34</td><td class="mono">Matched 39, Amount mismatch 3</td></tr>
+                <tr><td>References not trimmed</td><td class="mono">"INV-1005␣"</td><td class="mono bad">Only in Bank 10</td><td class="mono">Only in Bank 2</td></tr>
+                <tr><td>Dates read month-first</td><td class="mono">22/11/2026</td><td class="mono bad">Bank date —</td><td class="mono">22 Nov 2026</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSTALL -->
+      <section id="install" class="band install" aria-labelledby="install-title">
+        <div class="inner split">
+          <div class="section-head">
+            <h2 id="install-title">Put a gate on your repo tonight</h2>
+            <p>Four commands. The third one writes the config, an example spec, the Stop hook and the CLAUDE.md rule.</p>
+            <p class="links">
+              <a class="btn" data-link="repo" href="#install">Source on GitHub</a>
+              <a class="btn ghost" data-link="demo" href="#proof">Try ReconPilot</a>
+            </p>
+          </div>
+          <ol class="commands">
+            <li><span>Install Kane CLI</span><div class="install-line"><code>npm install -g @testmuai/kane-cli</code><button class="copy" type="button" data-copy="npm install -g @testmuai/kane-cli" aria-label="Copy Kane CLI install command">Copy</button></div></li>
+            <li><span>Sign in to TestMu AI</span><div class="install-line"><code>kane-cli login</code><button class="copy" type="button" data-copy="kane-cli login" aria-label="Copy login command">Copy</button></div></li>
+            <li><span>Add the gate</span><div class="install-line"><code>npx kane-gate init</code><button class="copy" type="button" data-copy="npx kane-gate init" aria-label="Copy init command">Copy</button></div></li>
+            <li><span>Watch it work, in a second terminal</span><div class="install-line"><code>npx kane-gate watch</code><button class="copy" type="button" data-copy="npx kane-gate watch" aria-label="Copy watch command">Copy</button></div></li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="inner foot-inner">
+        <span>kane-gate · MIT · built with Claude Code for the Kane CLI Hackathon, November 2026</span>
+        <span>Kane CLI is a product of TestMu AI. kane-gate is an independent open-source project.</span>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" hidden></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "reconpilot-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/reconpilot",
+    "build": "npm run build -w apps/reconpilot && npm run build -w apps/site",
+    "test": "npm test --workspaces --if-present",
+    "samples": "node scripts/make-samples.mjs",
+    "gate": "kane-gate run",
+    "gate:report": "kane-gate report --open",
+    "gate:watch": "kane-gate watch",
+    "demo:break": "node scripts/demo-break.mjs",
+    "site": "npm run dev -w apps/site"
+  }
+}
