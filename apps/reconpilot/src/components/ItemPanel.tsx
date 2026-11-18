@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Txn } from "../recon/parse";
-import { formatDate, formatIDR } from "../format";
+import { formatDate, formatMoney } from "../format";
 import type { Item, Resolution, Run } from "../lib/types";
 import { store } from "../lib/store";
 import { errMsg, useToast } from "../lib/toast";
@@ -12,7 +12,7 @@ function explain(r: Item): string {
       return "Reference and amount agree in both files. Nothing to do.";
     case "amount_mismatch": {
       const d = r.diff ?? 0;
-      return `Same reference, but the bank shows ${formatIDR(Math.abs(d))} ${d > 0 ? "more" : "less"} than the ERP ledger.`;
+      return `Same reference, but the bank shows ${formatMoney(Math.abs(d))} ${d > 0 ? "more" : "less"} than the ERP ledger.`;
     }
     case "unmatched_a":
       return "Money moved in the bank, but nothing in the ERP ledger carries this reference.";
@@ -61,7 +61,7 @@ function Side({ title, t, highlight }: { title: string; t: Txn | null; highlight
           </dd>
           <dt>Amount</dt>
           <dd className={highlight ? "hl" : ""}>
-            <span className="num">{formatIDR(t.amount)}</span>
+            <span className="num">{formatMoney(t.amount)}</span>
             <span className="from">from <Raw value={t.rawAmount} /></span>
           </dd>
           <dt>Description</dt>
@@ -127,7 +127,7 @@ export function ItemPanel({ item, run, onClose, onChange }: { item: Item; run: R
         {mismatch && (
           <div className="delta">
             <span>Difference</span>
-            <strong className="num">{formatIDR(item.diff)}</strong>
+            <strong className="num">{formatMoney(item.diff)}</strong>
           </div>
         )}
 

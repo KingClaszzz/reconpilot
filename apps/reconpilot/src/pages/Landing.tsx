@@ -102,14 +102,14 @@ function DotField() {
 
 type Verdict = "ok" | "diff" | "bank" | "erp" | "dup";
 const LINES: { bank: string | null; bankAmt: string; erp: string | null; erpAmt: string; v: Verdict; note: string }[] = [
-  { bank: "INV-1001", bankAmt: "1.625.000,00", erp: "INV-1001", erpAmt: "1625000.00", v: "ok", note: "matched" },
-  { bank: "INV-1007", bankAmt: "925.000,00", erp: "INV-1007", erpAmt: "875000.00", v: "diff", note: "+Rp 50.000" },
-  { bank: "inv-1012·", bankAmt: "7.750.000,00", erp: "INV-1012", erpAmt: "7750000.00", v: "ok", note: "case + space fixed" },
-  { bank: "TRF-2001", bankAmt: "6.500,00", erp: null, erpAmt: "", v: "bank", note: "only in bank" },
-  { bank: "INV-1019", bankAmt: "8.250.000,00", erp: "INV-1019", erpAmt: "8375000.00", v: "diff", note: "−Rp 125.000" },
-  { bank: "INV-1025", bankAmt: "7.625.000,00", erp: "INV-1025", erpAmt: "7625000.00", v: "ok", note: "matched" },
-  { bank: "INV-1025", bankAmt: "7.625.000,00", erp: null, erpAmt: "", v: "dup", note: "posted twice" },
-  { bank: null, bankAmt: "", erp: "INV-1043", erpAmt: "5375000.00", v: "erp", note: "only in ERP" },
+  { bank: "INV-1001", bankAmt: "1.625,00", erp: "INV-1001", erpAmt: "1625.00", v: "ok", note: "matched" },
+  { bank: "INV-1007", bankAmt: "925,00", erp: "INV-1007", erpAmt: "875.00", v: "diff", note: "+$50.00" },
+  { bank: "inv-1012·", bankAmt: "7.750,00", erp: "INV-1012", erpAmt: "7750.00", v: "ok", note: "case + space fixed" },
+  { bank: "TRF-2001", bankAmt: "6,50 DB", erp: null, erpAmt: "", v: "bank", note: "only in bank" },
+  { bank: "INV-1019", bankAmt: "8.250,00", erp: "INV-1019", erpAmt: "8375.00", v: "diff", note: "−$125.00" },
+  { bank: "INV-1025", bankAmt: "7.625,00", erp: "INV-1025", erpAmt: "7625.00", v: "ok", note: "matched" },
+  { bank: "INV-1025", bankAmt: "7.625,00", erp: null, erpAmt: "", v: "dup", note: "posted twice" },
+  { bank: null, bankAmt: "", erp: "INV-1043", erpAmt: "5375.00", v: "erp", note: "only in ERP" },
 ];
 const STAMP: Record<Verdict, string> = { ok: "✓", diff: "≠", bank: "?", erp: "?", dup: "×2" };
 
@@ -169,7 +169,7 @@ function Machine() {
   );
 }
 
-const FORMATS = ["22/11/2026", "Rp 1.625.000,00", "2026-11-22", "(125.000,00)", "1,625,000.00", "inv-1012␠", "Tanggal · Referensi · Nominal", "Keterangan", "-Rp 6.500", "08/11/2026", "INV-1007", "Jumlah · Memo · Doc No"];
+const FORMATS = [".xlsx", "22/11/2026", "11/22/2026", "$1,625.00", "1.625,00", "1,625.00 CR", "6.50 DB", "(125.00)", "Debit · Credit", "inv-1012␠", "Tanggal · Referensi · Nominal", "Nov 22, 2026", "Date · Reference · Amount", "€1.625,50"];
 
 export default function Landing() {
   const { user } = useAuth();
@@ -208,7 +208,7 @@ export default function Landing() {
         <DotField />
         <div className="wrap hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow"><Decode text="BANK ↔ ERP RECONCILIATION FOR INDONESIAN FINANCE TEAMS" speed={18} /></p>
+            <p className="eyebrow"><Decode text="BANK ↔ ERP RECONCILIATION FOR FINANCE TEAMS" speed={18} /></p>
             <h1>
               Close the books
               <br />
@@ -223,7 +223,7 @@ export default function Landing() {
               <Link to="/signup" className="btn ghost lg">Create a workspace</Link>
             </div>
             <ul className="hero-proof">
-              <li><Icon name="check" size={14} /> Reads 22/11/2026 and 1.625.000,00 as-is</li>
+              <li><Icon name="check" size={14} /> Reads CSV and Excel, any date or number format</li>
               <li><Icon name="check" size={14} /> Row-level security per workspace</li>
               <li><Icon name="check" size={14} /> No card, demo data included</li>
             </ul>
@@ -250,7 +250,7 @@ export default function Landing() {
             <article className="step3">
               <span className="step3-n">01</span>
               <h3>Drop two exports</h3>
-              <p>Mutasi rekening from internet banking, cash GL lines from your ERP. Columns like Tanggal, Referensi and Nominal are detected for you.</p>
+              <p>Your bank statement and your ERP cash ledger, as CSV or Excel. Header rows, Debit/Credit columns and references buried in descriptions are handled for you.</p>
             </article>
             <article className="step3">
               <span className="step3-n">02</span>
@@ -275,12 +275,12 @@ export default function Landing() {
           <Reveal className="bento">
             <article className="tile t-queue">
               <h3>Exception queue</h3>
-              <p>Every open line from every account, sorted by rupiah at stake or by age.</p>
+              <p>Every open line from every account, sorted by money at stake or by age.</p>
               <div className="mini-queue" aria-hidden>
-                <div><i className="s-amount_mismatch" /> INV-1019 <b>Rp 125.000</b></div>
-                <div><i className="s-unmatched_a" /> TRF-2002 <b>Rp 2.150.000</b></div>
-                <div><i className="s-duplicate" /> INV-1025 <b>Rp 7.625.000</b></div>
-                <div><i className="s-unmatched_b" /> INV-1043 <b>Rp 5.375.000</b></div>
+                <div><i className="s-amount_mismatch" /> INV-1019 <b>$125.00</b></div>
+                <div><i className="s-unmatched_a" /> TRF-2002 <b>$2,150.00</b></div>
+                <div><i className="s-duplicate" /> INV-1025 <b>$7,625.00</b></div>
+                <div><i className="s-unmatched_b" /> INV-1043 <b>$5,375.00</b></div>
               </div>
             </article>
             <article className="tile t-close">

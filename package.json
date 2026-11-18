@@ -15,5 +15,8 @@
     "gate:watch": "kane-gate watch",
     "demo:break": "node scripts/demo-break.mjs",
     "site": "npm run dev -w apps/site"
+  },
+  "devDependencies": {
+    "write-excel-file": "^4.1.1"
   }
 }

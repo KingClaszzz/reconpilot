@@ -7,13 +7,14 @@ import { Icon, PageHead, RunStatusChip, formatPeriod } from "../components/ui";
 import { matchRate } from "../components/RunsTable";
 import { Reveal } from "../lib/motion";
 
-const BANKS = ["BCA", "Mandiri", "BNI", "BRI", "CIMB Niaga", "Permata", "BSI", "Danamon", "OCBC", "Other"];
+const BANKS = ["BCA", "Mandiri", "BNI", "BRI", "CIMB Niaga", "Chase", "Bank of America", "Wells Fargo", "HSBC", "Citi", "DBS", "Barclays", "Wise", "Other"];
+const CURRENCIES = ["USD", "EUR", "GBP", "SGD", "IDR", "AUD", "JPY"];
 
 export default function Accounts() {
   const toast = useToast();
   const [accounts, setAccounts] = useState<Account[] | null>(null);
   const [runs, setRuns] = useState<Run[]>([]);
-  const [form, setForm] = useState({ name: "", bank: "BCA", number: "" });
+  const [form, setForm] = useState({ name: "", bank: "BCA", number: "", currency: "USD" });
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -29,9 +30,9 @@ export default function Accounts() {
     if (digits.length < 4) return toast("Enter at least the last 4 digits of the account number.", "err");
     setAdding(true);
     try {
-      const acc = await store.createAccount({ name: form.name.trim().slice(0, 80), bank: form.bank, last4: digits.slice(-4), currency: "IDR" });
+      const acc = await store.createAccount({ name: form.name.trim().slice(0, 80), bank: form.bank, last4: digits.slice(-4), currency: form.currency });
       setAccounts((l) => [...(l ?? []), acc]);
-      setForm({ name: "", bank: form.bank, number: "" });
+      setForm({ ...form, name: "", number: "" });
       toast(`${acc.bank} ${acc.name} added`);
     } catch (err) {
       toast(errMsg(err), "err");
@@ -51,7 +52,7 @@ export default function Accounts() {
             <article key={a.id} className="acct">
               <header>
                 <span className="acct-bank">{a.bank}</span>
-                <span className="acct-no">•••• {a.last4}</span>
+                <span className="acct-no">{a.currency} · •••• {a.last4}</span>
               </header>
               <h3>{a.name}</h3>
               <dl>
@@ -70,7 +71,7 @@ export default function Accounts() {
           <h3>Add a bank account</h3>
           <label className="field">
             <span>Name</span>
-            <input required maxLength={80} placeholder="e.g. Operasional" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input required maxLength={80} placeholder="e.g. Operating" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </label>
           <div className="field-row">
             <label className="field">
@@ -84,6 +85,12 @@ export default function Accounts() {
               <input inputMode="numeric" autoComplete="off" placeholder="last 4 is enough" maxLength={24} value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
             </label>
           </div>
+          <label className="field">
+            <span>Currency</span>
+            <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+              {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </label>
           <button type="submit" className="btn primary" disabled={adding}>
             <Icon name="plus" size={16} /> {adding ? "Adding…" : "Add account"}
           </button>

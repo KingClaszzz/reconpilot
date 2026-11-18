@@ -45,10 +45,10 @@ function month({ period, lines, mismatch, onlyBank, onlyErp, dup, seed }: Shape)
   const base = 1000 + (m % 12) * 100;
   for (let i = 0; i < lines; i++) {
     const ref = `INV-${base + i}`;
-    const amount = Math.round((0.5 + r() * 14.5) * 40) * 25000;
+    const amount = Math.round((0.5 + r() * 14.5) * 40) * 25;
     const day = 1 + Math.floor(r() * days);
     const who = CUSTOMERS[Math.floor(r() * CUSTOMERS.length)];
-    const bankAmount = i < mismatch ? amount + [50000, -125000, 1000, -7500][i % 4] : amount;
+    const bankAmount = i < mismatch ? amount + [50, -125, 1, -7.5][i % 4] : amount;
     bank.push(t(bank.length + 1, ref, day, bankAmount, `TRF ${who}`));
     if (i >= lines - onlyErp) continue;
     erp.push(t(erp.length + 1, ref, day, amount, `Payment ${who}`));
@@ -56,9 +56,9 @@ function month({ period, lines, mismatch, onlyBank, onlyErp, dup, seed }: Shape)
   for (let i = 0; i < onlyErp; i++) bank.pop();
   for (let i = 0; i < onlyErp; i++) {
     const ref = `INV-${base + lines + i}`;
-    erp.push(t(erp.length + 1, ref, 1 + Math.floor(r() * days), Math.round((1 + r() * 8) * 40) * 25000, `Payment ${CUSTOMERS[i % CUSTOMERS.length]}`));
+    erp.push(t(erp.length + 1, ref, 1 + Math.floor(r() * days), Math.round((1 + r() * 8) * 40) * 25, `Payment ${CUSTOMERS[i % CUSTOMERS.length]}`));
   }
-  for (let i = 0; i < onlyBank; i++) bank.push(t(bank.length + 1, `TRF-${2000 + seed % 100 + i}`, 1 + Math.floor(r() * days), [6500, 2150000, 48250][i % 3], ["Biaya admin bank", "Transfer masuk tanpa referensi invoice", "Bunga jasa giro"][i % 3]));
+  for (let i = 0; i < onlyBank; i++) bank.push(t(bank.length + 1, `TRF-${2000 + seed % 100 + i}`, 1 + Math.floor(r() * days), [-6.5, 2150, 48.25][i % 3], ["Bank admin fee", "Incoming transfer, no invoice reference", "Interest income"][i % 3]));
   for (let i = 0; i < dup; i++) {
     const src = bank[3 + i * 5];
     bank.push({ ...src, row: bank.length + 1 });
@@ -80,15 +80,15 @@ export async function seedDemo(store: Store) {
   const [accounts, runs] = await Promise.all([store.listAccounts(), store.listRuns()]);
   if (accounts.length || runs.length) return;
 
-  const ops = await store.createAccount({ name: "Operasional", bank: "BCA", last4: "4821", currency: "IDR" });
-  const payroll = await store.createAccount({ name: "Collections", bank: "Mandiri", last4: "0937", currency: "IDR" });
+  const ops = await store.createAccount({ name: "Operating", bank: "BCA", last4: "4821", currency: "USD" });
+  const payroll = await store.createAccount({ name: "Collections", bank: "Mandiri", last4: "0937", currency: "USD" });
 
   const history: Array<Shape & { account: string; acct: string; closed: boolean; open: number }> = [
-    { account: ops.id, acct: "BCA Operasional", period: "2026-08", lines: 52, mismatch: 2, onlyBank: 2, onlyErp: 1, dup: 0, seed: 8, closed: true, open: 0 },
+    { account: ops.id, acct: "BCA Operating", period: "2026-08", lines: 52, mismatch: 2, onlyBank: 2, onlyErp: 1, dup: 0, seed: 8, closed: true, open: 0 },
     { account: payroll.id, acct: "Mandiri Collections", period: "2026-08", lines: 31, mismatch: 1, onlyBank: 1, onlyErp: 1, dup: 0, seed: 18, closed: true, open: 0 },
-    { account: ops.id, acct: "BCA Operasional", period: "2026-09", lines: 58, mismatch: 1, onlyBank: 2, onlyErp: 2, dup: 1, seed: 9, closed: true, open: 0 },
+    { account: ops.id, acct: "BCA Operating", period: "2026-09", lines: 58, mismatch: 1, onlyBank: 2, onlyErp: 2, dup: 1, seed: 9, closed: true, open: 0 },
     { account: payroll.id, acct: "Mandiri Collections", period: "2026-09", lines: 34, mismatch: 2, onlyBank: 1, onlyErp: 0, dup: 0, seed: 19, closed: true, open: 0 },
-    { account: ops.id, acct: "BCA Operasional", period: "2026-10", lines: 61, mismatch: 3, onlyBank: 3, onlyErp: 2, dup: 1, seed: 10, closed: false, open: 0.55 },
+    { account: ops.id, acct: "BCA Operating", period: "2026-10", lines: 61, mismatch: 3, onlyBank: 3, onlyErp: 2, dup: 1, seed: 10, closed: false, open: 0.55 },
     { account: payroll.id, acct: "Mandiri Collections", period: "2026-10", lines: 36, mismatch: 2, onlyBank: 2, onlyErp: 1, dup: 1, seed: 20, closed: false, open: 0.7 },
   ];
 

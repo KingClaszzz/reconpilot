@@ -8,4 +8,4 @@ Type "INV-1007" into the "Search reference" box.
 Verify the table row for INV-1007:
 - status is "Amount mismatch"
 - Bank date is "22 Nov 2026" and ERP date is "22 Nov 2026"
-- Difference is Rp 50.000,00
+- Difference is $50.00

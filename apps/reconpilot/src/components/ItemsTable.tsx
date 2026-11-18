@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formatDate, formatIDR } from "../format";
+import { formatDate, formatMoney } from "../format";
 import type { Item, Run } from "../lib/types";
 import { ResolutionChip, StatusChip, formatPeriod } from "./ui";
 
@@ -54,10 +54,10 @@ export function ItemsTable({ items, selectedId, onOpen, runs, emptyText }: Props
                   <td className="mono">{r.ref}</td>
                   {runs && <td className="nowrap">{run ? `${formatPeriod(run.period)} · ${run.name.split(" · ")[0]}` : "—"}</td>}
                   <td className="nowrap">{r.a ? formatDate(r.a.date) : ""}</td>
-                  <td className="num">{r.a ? formatIDR(r.a.amount) : ""}</td>
+                  <td className="num">{r.a ? formatMoney(r.a.amount) : ""}</td>
                   <td className="nowrap">{r.b ? formatDate(r.b.date) : ""}</td>
-                  <td className="num">{r.b ? formatIDR(r.b.amount) : ""}</td>
-                  <td className={`num ${r.diff ? "neg" : ""}`}>{r.diff !== null ? formatIDR(r.diff) : ""}</td>
+                  <td className="num">{r.b ? formatMoney(r.b.amount) : ""}</td>
+                  <td className={`num ${r.diff ? "neg" : ""}`}>{r.diff !== null ? formatMoney(r.diff) : ""}</td>
                   <td><ResolutionChip r={r.resolution} /></td>
                   <td className="desc">{r.a?.description || r.b?.description}</td>
                 </tr>

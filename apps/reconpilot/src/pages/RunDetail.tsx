@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { STATUS_LABEL, csvCell, type Status } from "../recon/match";
 import { STATUS_HINT, STATUS_ORDER } from "../status";
-import { formatIDR, formatShare } from "../format";
+import { formatMoney, formatShare } from "../format";
 import { store } from "../lib/store";
 import { errMsg, useToast } from "../lib/toast";
 import { RESOLUTION_LABEL, type Account, type Item, type Run } from "../lib/types";
@@ -66,12 +66,12 @@ export default function RunDetail() {
   const contextText = useMemo(() => {
     if (!run) return null;
     const open = items.filter((i) => i.resolution === "open").sort((a, b) => atStake(b) - atStake(a));
-    const line = (i: Item) => `${i.ref} | ${STATUS_LABEL[i.status]} | bank ${i.a ? `${i.a.date} ${formatIDR(i.a.amount)}` : "-"} | ERP ${i.b ? `${i.b.date} ${formatIDR(i.b.amount)}` : "-"}${i.diff ? ` | diff ${formatIDR(i.diff)}` : ""} | ${(i.a?.description || i.b?.description || "").slice(0, 60)}`;
+    const line = (i: Item) => `${i.ref} | ${STATUS_LABEL[i.status]} | bank ${i.a ? `${i.a.date} ${formatMoney(i.a.amount)}` : "-"} | ERP ${i.b ? `${i.b.date} ${formatMoney(i.b.amount)}` : "-"}${i.diff ? ` | diff ${formatMoney(i.diff)}` : ""} | ${(i.a?.description || i.b?.description || "").slice(0, 60)}`;
     return [
       `Reconciliation: ${run.name} (${run.status === "closed" ? "closed" : "in review"})`,
       `Files: ${run.bank_file} vs ${run.erp_file}`,
       `Counts: ${STATUS_ORDER.map((s) => `${STATUS_LABEL[s]} ${run.counts[s]}`).join(", ")}`,
-      `Totals: bank ${formatIDR(run.totals.a)}, ERP ${formatIDR(run.totals.b)}, net ${formatIDR(run.totals.net)}`,
+      `Totals: bank ${formatMoney(run.totals.a)}, ERP ${formatMoney(run.totals.b)}, net ${formatMoney(run.totals.net)}`,
       `Exceptions resolved: ${items.filter((i) => i.resolution === "resolved" || i.resolution === "ignored").length} of ${items.filter((i) => i.status !== "matched").length}`,
       selectedRef ? `Line the user has open: ${line(selectedRef)}${selectedRef.note ? ` | note: ${selectedRef.note}` : ""}` : "",
       open.length ? `Open exceptions (largest first):\n${open.slice(0, 25).map(line).join("\n")}` : "No open exceptions.",
@@ -201,9 +201,9 @@ export default function RunDetail() {
             <span>of lines matched</span>
           </p>
           <dl className="totals">
-            <div><dt>Bank total</dt><dd data-testid="total-bank">{formatIDR(run.totals.a)}</dd></div>
-            <div><dt>ERP total</dt><dd data-testid="total-erp">{formatIDR(run.totals.b)}</dd></div>
-            <div><dt>Net difference</dt><dd data-testid="total-net" className={run.totals.net ? "neg" : ""}>{formatIDR(run.totals.net)}</dd></div>
+            <div><dt>Bank total</dt><dd data-testid="total-bank">{formatMoney(run.totals.a)}</dd></div>
+            <div><dt>ERP total</dt><dd data-testid="total-erp">{formatMoney(run.totals.b)}</dd></div>
+            <div><dt>Net difference</dt><dd data-testid="total-net" className={run.totals.net ? "neg" : ""}>{formatMoney(run.totals.net)}</dd></div>
           </dl>
         </div>
         <Composition counts={run.counts} active={filter === "open" ? "all" : filter} onPick={(s) => setFilter(filter === s ? "all" : s)} />

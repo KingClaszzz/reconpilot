@@ -31,7 +31,11 @@ const TOLERANCE = 0.01;
 function splitDuplicates(txns: Txn[], source: "A" | "B", rows: ResultRow[]): Map<string, Txn> {
   const first = new Map<string, Txn>();
   for (const t of txns) {
-    if (!t.ref) continue;
+    // A line without any reference can't be matched, but it still needs a person.
+    if (!t.ref) {
+      rows.push({ id: `noref-${source}-${t.row}`, status: source === "A" ? "unmatched_a" : "unmatched_b", ref: "(no reference)", a: source === "A" ? t : null, b: source === "B" ? t : null, diff: null });
+      continue;
+    }
     if (first.has(t.ref)) {
       rows.push({ id: `dup-${source}-${t.row}`, status: "duplicate", ref: t.ref, a: source === "A" ? t : null, b: source === "B" ? t : null, diff: null, source });
     } else {

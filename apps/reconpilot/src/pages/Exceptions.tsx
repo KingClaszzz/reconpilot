@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { STATUS_LABEL, type Status } from "../recon/match";
 import { STATUS_ORDER } from "../status";
-import { formatIDR } from "../format";
+import { formatMoney } from "../format";
 import { store } from "../lib/store";
 import { atStake, type Item, type Run } from "../lib/types";
 import { CountUp, Reveal } from "../lib/motion";
@@ -47,7 +47,7 @@ export default function Exceptions() {
   const total = open.reduce((t, i) => t + atStake(i), 0);
   usePageContext(
     items
-      ? [`Exception queue: ${open.length} open, ${formatIDR(total)} at stake.`, ...list.slice(0, 25).map((i) => `${i.ref} | ${STATUS_LABEL[i.status]} | ${runs.get(i.run_id)?.name ?? ""} | at stake ${formatIDR(atStake(i))} | ${age(i)} days old`)].join("\n")
+      ? [`Exception queue: ${open.length} open, ${formatMoney(total)} at stake.`, ...list.slice(0, 25).map((i) => `${i.ref} | ${STATUS_LABEL[i.status]} | ${runs.get(i.run_id)?.name ?? ""} | at stake ${formatMoney(atStake(i))} | ${age(i)} days old`)].join("\n")
       : null,
   );
 
@@ -65,7 +65,7 @@ export default function Exceptions() {
             <div className="kpi">
               <span className="kpi-label">Open</span>
               <strong className="kpi-value"><CountUp value={open.length} /></strong>
-              <span className="kpi-foot">{formatIDR(total)} at stake</span>
+              <span className="kpi-foot">{formatMoney(total)} at stake</span>
             </div>
             {buckets.map((b) => (
               <div className="kpi" key={b.label}>
