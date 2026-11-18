@@ -84,7 +84,7 @@ export function CountUp({ value, format = (n) => Math.round(n).toLocaleString("e
   }, [seen, value, duration]);
   return (
     <span ref={ref} className={className}>
-      {format(seen ? shown : 0)}
+      {format(seen || reducedMotion() ? shown : 0)}
     </span>
   );
 }
