@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../lib/auth";
 import { store } from "../lib/store";
@@ -6,6 +6,18 @@ import { errMsg } from "../lib/toast";
 import { Logo, Mascot } from "../components/ui";
 import { Decode } from "../lib/motion";
 import { DemoButton } from "./Landing";
+
+// Supabase sends people back with "#error=...&error_code=otp_expired" when a link is stale.
+// Read it before anything else touches the URL.
+const startHash = typeof window !== "undefined" ? window.location.hash : "";
+
+function linkError(hash: string): string | null {
+  const h = new URLSearchParams(hash.replace(/^#/, ""));
+  const code = h.get("error_code") ?? h.get("error");
+  if (!code) return null;
+  if (code === "otp_expired") return "That confirmation link has expired or was already used. Enter your email below and we'll send you a fresh one.";
+  return "That sign-in link didn't work. Enter your email below and we'll send you a new one.";
+}
 
 export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const { user, ready } = useAuth();
@@ -17,6 +29,29 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+
+  useEffect(() => {
+    const msg = linkError(startHash);
+    if (!msg) return;
+    setError(msg);
+    setNeedsConfirm(true);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+
+  async function resend() {
+    if (!email.trim()) return setError("Enter the email you signed up with, then press Resend.");
+    setBusy(true);
+    try {
+      await store.resendConfirmation(email.trim());
+      setError(null);
+      setInfo(`A new confirmation link is on its way to ${email.trim()}. It works once and expires after a while, so open it soon.`);
+    } catch (err) {
+      setError(errMsg(err));
+    } finally {
+      setBusy(false);
+    }
+  }
   const from = (loc.state as { from?: string } | null)?.from ?? "/app";
 
   if (ready && user) return <Navigate to={from} replace />;
@@ -36,7 +71,11 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
         else nav("/app", { replace: true });
       }
     } catch (err) {
-      setError(errMsg(err));
+      const msg = errMsg(err);
+      if (/not confirmed/i.test(msg)) {
+        setNeedsConfirm(true);
+        setError("You haven't confirmed this email yet. Open the link we sent, or get a new one below.");
+      } else setError(msg);
     } finally {
       setBusy(false);
     }
@@ -67,6 +106,11 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
           </label>
           {error && <p className="form-error" role="alert">{error}</p>}
           {info && <p className="form-info" role="status">{info}</p>}
+          {needsConfirm && !signup && (
+            <button type="button" className="btn ghost block" disabled={busy} onClick={resend}>
+              Resend confirmation email
+            </button>
+          )}
           <button type="submit" className="btn primary lg block" disabled={busy}>
             {busy ? "One moment…" : signup ? "Create workspace" : "Sign in"}
           </button>

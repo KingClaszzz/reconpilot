@@ -95,6 +95,9 @@ export function localStore(): Store {
       setMe(user);
       return user;
     },
+    async resendConfirmation() {
+      throw new Error("This workspace runs in your browser only, so there is no email to confirm.");
+    },
     async demoSignIn() {
       setMe(DEMO);
       return DEMO;

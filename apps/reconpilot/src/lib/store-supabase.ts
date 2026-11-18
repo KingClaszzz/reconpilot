@@ -15,6 +15,9 @@ function check<T>(res: { data: T; error: { message: string } | null }): T {
   return res.data;
 }
 
+// Where the confirmation email sends people back to (must be allowed in Supabase's Redirect URLs).
+const confirmUrl = () => `${window.location.origin}/login`;
+
 const ITEM_COLUMNS = "id,run_id,position,status,ref,a,b,diff,source,resolution,note,resolved_at";
 
 export function supabaseStore(url: string, anonKey: string): Store {
@@ -58,11 +61,15 @@ export function supabaseStore(url: string, anonKey: string): Store {
       return me;
     },
     async signUp(email, password, workspace) {
-      const res = await sb.auth.signUp({ email, password, options: { data: { workspace } } });
+      const res = await sb.auth.signUp({ email, password, options: { data: { workspace }, emailRedirectTo: confirmUrl() } });
       if (res.error) throw new Error(res.error.message);
       if (!res.data.session || !res.data.user) return "confirm";
       me = toUser(res.data.user);
       return me;
+    },
+    async resendConfirmation(email) {
+      const { error } = await sb.auth.resend({ type: "signup", email, options: { emailRedirectTo: confirmUrl() } });
+      if (error) throw new Error(error.message);
     },
     async demoSignIn() {
       if (!DEMO_PASSWORD) throw new Error("Demo account is not configured (VITE_DEMO_PASSWORD).");
