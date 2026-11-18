@@ -7,7 +7,7 @@ function assistantApi(env: Record<string, string>): Plugin {
     name: "assistant-api",
     configureServer(server) {
       server.middlewares.use("/api/assistant", async (req, res) => {
-        const { handleAssistant } = await server.ssrLoadModule("/server/assistant.ts");
+        const { handleAssistant } = await server.ssrLoadModule("/api/assistant.ts");
         const chunks: Buffer[] = [];
         for await (const c of req) chunks.push(c as Buffer);
         const headers = new Headers();
