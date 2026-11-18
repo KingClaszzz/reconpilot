@@ -89,6 +89,7 @@ export interface Store {
   onAuthChange(cb: (u: User | null) => void): () => void;
   signIn(email: string, password: string): Promise<User>;
   signUp(email: string, password: string, workspace: string): Promise<User | "confirm">;
+  resendConfirmation(email: string): Promise<void>;
   demoSignIn(): Promise<User>;
   signOut(): Promise<void>;
 
