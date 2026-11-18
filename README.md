@@ -71,11 +71,24 @@ A few things that keep it from being annoying:
 
 ## The demo app: ReconPilot
 
-`apps/reconpilot` is what kane-gate guards in this repo. It's a bank-to-ERP reconciliation app for Indonesian finance teams, built with React, Vite and Supabase.
+`apps/reconpilot` is what kane-gate guards in this repo. It's a bank-to-ERP reconciliation app built with React, Vite and Supabase.
 
-You upload a bank statement and an ERP ledger export. ReconPilot matches the lines by reference and puts everything that doesn't match into a queue. You resolve each one with a note, and once nothing is open you close the period. Closed periods are locked by the database. There's also an overview dashboard, multiple bank accounts and an audit log.
+You upload a bank statement and an ERP ledger export, as CSV or Excel. ReconPilot matches the lines by reference and puts everything that doesn't match into a queue. You resolve each one with a note, and once nothing is open you close the period. Closed periods are locked by the database. There's also an overview dashboard, multiple bank accounts and an audit log.
 
 "Try the live demo" logs you into a demo workspace with two bank accounts and three months of history.
+
+### Real bank files
+
+Bank exports are messy, so the parser handles what they actually look like:
+
+- `.xlsx` workbooks as well as CSV (including semicolon CSVs saved by Excel)
+- account info or title rows above the table
+- separate Debit and Credit columns, and amounts like `1,625.00 CR` / `6.50 DB`
+- references buried in the description ("TRF PT KENCANA MAS INV-1004")
+- `1,625.00`, `1.625,00` and `$1,625.00`
+- day/month vs month/day, detected per file; when a file doesn't make it clear, the app says so and lets you switch
+
+`apps/reconpilot/public/samples` has the same transactions in three formats (clean CSV, internet-banking CSV, Excel). All three must reconcile to the same numbers, and Kane checks that.
 
 ### Supabase
 
@@ -93,7 +106,7 @@ If you skip this, the app still works. Data is just kept in the browser instead.
 
 | Bug | What Kane sees |
 | --- | --- |
-| `1.625.000,00` read as `1.625` | 0 matched instead of 39 |
+| `1.625,00` read as `1.625` | 0 matched instead of 39 |
 | references not trimmed | 10 "Only in Bank" instead of 2 |
 | `22/11/2026` read month-first | bank date shows "—" instead of "22 Nov 2026" |
 

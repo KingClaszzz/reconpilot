@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { parseCsv, type ParsedFile } from "../recon/parse";
+import { parseCsv, parseTable, type DateOrder, type ParsedFile } from "../recon/parse";
 import { reconcile } from "../recon/match";
 import { store } from "../lib/store";
 import { errMsg, useToast } from "../lib/toast";
@@ -33,18 +33,38 @@ export default function NewRun() {
     });
   }, []);
 
-  function setFile(side: Side, name: string, text: string) {
-    setFiles((f) => ({ ...f, [side]: { name, parsed: parseCsv(text) } }));
+  // CSV is read as text; Excel workbooks are unzipped in the browser (nothing is uploaded).
+  async function parseFile(name: string, data: Blob): Promise<ParsedFile> {
+    const lower = name.toLowerCase();
+    if (lower.endsWith(".xls")) throw new Error(`${name} is an old Excel 97 file. Save it as .xlsx or CSV and try again.`);
+    const head = new Uint8Array(await data.slice(0, 4).arrayBuffer());
+    const isZip = head[0] === 0x50 && head[1] === 0x4b; // "PK": .xlsx even if renamed
+    if (lower.endsWith(".xlsx") || isZip) {
+      const { readSheet } = await import("read-excel-file/universal");
+      return parseTable(await readSheet(await data.arrayBuffer()));
+    }
+    return parseCsv(await data.text());
   }
   async function readFile(side: Side, f: File) {
     if (f.size > MAX_BYTES) return toast(`${f.name} is larger than 15 MB. Split the export by month.`, "err");
-    setFile(side, f.name, await f.text());
-  }
-  async function loadSamples() {
     try {
-      const [bank, erp] = await Promise.all(["/samples/bank.csv", "/samples/erp.csv"].map((u) => fetch(u).then((r) => r.text())));
-      setFile("A", "bank.csv", bank);
-      setFile("B", "erp.csv", erp);
+      const parsed = await parseFile(f.name, f);
+      setFiles((x) => ({ ...x, [side]: { name: f.name, parsed } }));
+    } catch (e) {
+      toast(errMsg(e) || `Couldn't read ${f.name}`, "err");
+    }
+  }
+  function setDateOrder(side: Side, order: DateOrder) {
+    setFiles((x) => {
+      const cur = x[side];
+      return cur ? { ...x, [side]: { ...cur, parsed: parseTable(cur.parsed.table, { dateOrder: order }) } } : x;
+    });
+  }
+  async function loadSamples(bankFile = "bank.csv") {
+    try {
+      const [bank, erp] = await Promise.all([bankFile, "erp.csv"].map((u) => fetch(`/samples/${u}`).then((r) => r.blob())));
+      const [a, b] = await Promise.all([parseFile(bankFile, bank), parseFile("erp.csv", erp)]);
+      setFiles({ A: { name: bankFile, parsed: a }, B: { name: "erp.csv", parsed: b } });
       setPeriod("2026-11");
     } catch (e) {
       toast(errMsg(e), "err");
@@ -86,7 +106,7 @@ export default function NewRun() {
         title="New reconciliation"
         sub="Pick the bank account and month, then drop the two exports. Files are parsed in your browser; only the matched result is saved."
         actions={
-          <button type="button" className="btn ghost" onClick={loadSamples} data-testid="load-samples">
+          <button type="button" className="btn ghost" onClick={() => loadSamples()} data-testid="load-samples">
             Load sample data
           </button>
         }
@@ -120,8 +140,13 @@ export default function NewRun() {
           <div className="wiz-body">
             <h2>Exports</h2>
             <div className="drops">
-              <DropZone step={1} title="Bank statement" hint="Mutasi rekening from internet banking" testid="upload-bank" file={files.A} onFile={(f) => readFile("A", f)} />
-              <DropZone step={2} title="ERP ledger" hint="Cash/bank GL lines from your ERP" testid="upload-erp" file={files.B} onFile={(f) => readFile("B", f)} />
+              <DropZone step={1} title="Bank statement" hint="Statement export from internet banking, CSV or .xlsx" testid="upload-bank" file={files.A} onFile={(f) => readFile("A", f)} onDateOrder={(o) => setDateOrder("A", o)} />
+              <DropZone step={2} title="ERP ledger" hint="Cash/bank GL lines from your ERP" testid="upload-erp" file={files.B} onFile={(f) => readFile("B", f)} onDateOrder={(o) => setDateOrder("B", o)} />
+            </div>
+            <div className="samples-row">
+              <span>Real-world exports:</span>
+              <button type="button" className="hint" onClick={() => loadSamples("mutasi-rekening.csv")} data-testid="sample-internet-banking">Internet banking CSV</button>
+              <button type="button" className="hint" onClick={() => loadSamples("bank-statement.xlsx")} data-testid="sample-xlsx">Excel workbook (.xlsx)</button>
             </div>
             {[...missing, ...empty].map((m) => (
               <p key={m} className="warn">⚠ {m}. Rename the header or export again.</p>
@@ -135,7 +160,7 @@ export default function NewRun() {
             <p className="muted">
               {files.A && files.B
                 ? `${files.A.parsed.txns.length.toLocaleString("en")} bank lines against ${files.B.parsed.txns.length.toLocaleString("en")} ERP lines, matched on reference.`
-                : "References are compared after trimming spaces and ignoring case. Dates like 22/11/2026 and amounts like 1.625.000,00 are read as Indonesian banks write them."}
+                : "CSV or Excel. References are compared after trimming spaces and ignoring case; 1,625.00 and 1.625,00 both work, and the day/month order is worked out per file."}
             </p>
             <button type="button" className="btn primary lg" disabled={!ready || busy} onClick={run} data-testid="reconcile">
               {busy ? "Saving…" : "Reconcile"} <Icon name="arrow" size={16} />

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { ParsedFile } from "../recon/parse";
+import type { DateOrder, ParsedFile } from "../recon/parse";
 
 const FIELD_LABEL: Record<string, string> = { date: "date", ref: "reference", description: "description", amount: "amount" };
 
@@ -10,9 +10,12 @@ interface Props {
   testid: string;
   file?: { name: string; parsed: ParsedFile };
   onFile: (file: File) => void;
+  onDateOrder?: (order: DateOrder) => void;
 }
 
-export function DropZone({ step, title, hint, testid, file, onFile }: Props) {
+const ORDER_LABEL: Record<DateOrder, string> = { dmy: "day/month", mdy: "month/day" };
+
+export function DropZone({ step, title, hint, testid, file, onFile, onDateOrder }: Props) {
   const [over, setOver] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const id = `file-${testid}`;
@@ -53,12 +56,27 @@ export function DropZone({ step, title, hint, testid, file, onFile }: Props) {
               </li>
             ))}
           </ul>
+          <ul className="file-notes">
+            {file.parsed.skipped > 0 && <li>Skipped {file.parsed.skipped} row{file.parsed.skipped > 1 ? "s" : ""} above the table (titles, account info)</li>}
+            {file.parsed.refFromText && <li>Reference found in the description column</li>}
+            {file.parsed.txns.some((t) => t.rawDate && /^\d{1,2}[/\-.]\d{1,2}[/\-.]/.test(t.rawDate)) && (
+              <li className={file.parsed.dateOrderCertain ? "" : "warn-note"}>
+                Dates read as {ORDER_LABEL[file.parsed.dateOrder]}
+                {!file.parsed.dateOrderCertain && " (the file doesn't make it clear)"}
+                {onDateOrder && (
+                  <button type="button" className="text-btn" onClick={() => onDateOrder(file.parsed.dateOrder === "dmy" ? "mdy" : "dmy")}>
+                    Switch to {ORDER_LABEL[file.parsed.dateOrder === "dmy" ? "mdy" : "dmy"]}
+                  </button>
+                )}
+              </li>
+            )}
+          </ul>
           <button type="button" className="text-btn" onClick={() => input.current?.click()}>Replace file</button>
         </div>
       ) : (
         <button type="button" className="drop-empty" onClick={() => input.current?.click()}>
           <span>{hint}</span>
-          <span className="drop-cta">Drop a CSV here or <u>browse</u></span>
+          <span className="drop-cta">Drop a CSV or Excel file, or <u>browse</u></span>
         </button>
       )}
 
@@ -66,7 +84,7 @@ export function DropZone({ step, title, hint, testid, file, onFile }: Props) {
         ref={input}
         id={id}
         type="file"
-        accept=".csv,text/csv"
+        accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         className="visually-hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];

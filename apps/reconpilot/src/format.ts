@@ -1,14 +1,25 @@
-const rupiah = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const rupiahShort = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", notation: "compact", maximumFractionDigits: 1 });
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export function formatIDR(n: number | null | undefined): string {
-  if (n === null || n === undefined) return "—";
-  return rupiah.format(n).replace(/ /g, " ");
+const cache = new Map<string, Intl.NumberFormat>();
+function fmt(currency: string, compact: boolean) {
+  const key = `${currency}:${compact}`;
+  let f = cache.get(key);
+  if (!f) {
+    f = new Intl.NumberFormat("en-US", { style: "currency", currency, ...(compact ? { notation: "compact", maximumFractionDigits: 1 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
+    cache.set(key, f);
+  }
+  return f;
 }
 
-export function formatIDRShort(n: number): string {
-  return rupiahShort.format(n).replace(/ /g, " ");
+// "$1,625.00"; pass an account's currency for anything else.
+export function formatMoney(n: number | null | undefined, currency = "USD"): string {
+  if (n === null || n === undefined) return "—";
+  return fmt(currency, false).format(n);
+}
+
+// "$36.1K"
+export function formatMoneyShort(n: number, currency = "USD"): string {
+  return fmt(currency, true).format(n);
 }
 
 // "2026-11-08" -> "8 Nov 2026"

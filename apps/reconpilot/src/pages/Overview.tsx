@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { formatIDR, formatIDRShort } from "../format";
+import { formatMoney, formatMoneyShort } from "../format";
 import type { Status } from "../recon/match";
 import { STATUS_ORDER } from "../status";
 import { useAuth } from "../lib/auth";
@@ -37,7 +37,7 @@ export default function Overview() {
     const prev = trend.at(-2)?.value;
     const byType = STATUS_ORDER.filter((s) => s !== "matched").map((s) => {
       const list = open.filter((i) => i.status === s);
-      return { key: s as Status, value: list.length, sub: formatIDR(list.reduce((t, i) => t + atStake(i), 0)) };
+      return { key: s as Status, value: list.length, sub: formatMoney(list.reduce((t, i) => t + atStake(i), 0)) };
     });
     const atRisk = open.reduce((t, i) => t + atStake(i), 0);
     const inReview = runs.filter((r) => r.status === "in_review");
@@ -80,7 +80,7 @@ export default function Overview() {
               foot={m.prev !== undefined ? <><Delta now={m.last} prev={m.prev} /> vs previous period</> : "latest period"}
             />
             <Kpi label="Open exceptions" value={data.open.length} foot={`across ${m.inReview.length} period${m.inReview.length === 1 ? "" : "s"} in review`} />
-            <Kpi label="Unreconciled amount" value={m.atRisk} format={(n) => formatIDRShort(n)} tone={m.atRisk ? "neg" : undefined} foot={formatIDR(m.atRisk)} />
+            <Kpi label="Unreconciled amount" value={m.atRisk} format={(n) => formatMoneyShort(n)} tone={m.atRisk ? "neg" : undefined} foot={formatMoney(m.atRisk)} />
             <Kpi label="Periods closed" value={m.closed} format={(n) => `${Math.round(n)} / ${data.runs.length}`} foot={`${data.accounts.length} bank account${data.accounts.length === 1 ? "" : "s"}`} />
           </Reveal>
 
@@ -117,7 +117,7 @@ export default function Overview() {
                           <StatusChip status={i.status} />
                           <span className="mono ref">{i.ref}</span>
                           <span className="muted where">{r ? `${r.name.split(" · ")[0]} · ${formatPeriod(r.period)}` : ""}</span>
-                          <strong className="num">{formatIDR(atStake(i))}</strong>
+                          <strong className="num">{formatMoney(atStake(i))}</strong>
                         </Link>
                       </li>
                     );

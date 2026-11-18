@@ -79,7 +79,7 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
       </section>
       <aside className="auth-art" aria-hidden>
         <div className="feed-paper">
-          {["INV-1001  1.625.000,00  ✓", "INV-1007    925.000,00  ≠", "inv-1012·  7.750.000,00  ✓", "TRF-2001        6.500,00  ?", "INV-1019  8.250.000,00  ≠", "INV-1021  3.100.000,00  ✓", "INV-1025  7.625.000,00  ×2", "INV-1030  2.400.000,00  ✓"].map((l, i) => (
+          {["INV-1001   1,625.00 CR  ✓", "INV-1007     925.00 CR  ≠", "inv-1012·  7,750.00 CR  ✓", "TRF-2001       6.50 DB  ?", "INV-1019   8,250.00 CR  ≠", "INV-1021   3,100.00 CR  ✓", "INV-1025   7,625.00 CR  ×2", "INV-1030   2,400.00 CR  ✓"].map((l, i) => (
             <p key={i} style={{ animationDelay: `${i * 120}ms` }}>{l}</p>
           ))}
         </div>
