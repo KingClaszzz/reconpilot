@@ -3,5 +3,6 @@
   "startCommand": "npm run dev",
   "specsDir": ".kane/specs",
   "maxAttempts": 3,
-  "headless": true
+  "headless": true,
+  "timeoutSec": 600
 }

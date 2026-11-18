@@ -5,6 +5,7 @@ interface Env {
   AI_BASE_URL?: string;
   AI_API_KEY?: string;
   AI_MODEL?: string;
+  AI_THINKING?: string;
 }
 
 interface Msg {
@@ -84,7 +85,15 @@ export async function handleAssistant(req: Request, env: Env): Promise<Response>
     upstream = await fetch(`${env.AI_BASE_URL.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: { authorization: `Bearer ${env.AI_API_KEY}`, "content-type": "application/json" },
-      body: JSON.stringify({ model: env.AI_MODEL, stream: true, max_tokens: 700, temperature: 0.3, messages: [{ role: "system", content: system }, ...messages] }),
+      body: JSON.stringify({
+        model: env.AI_MODEL,
+        stream: true,
+        max_tokens: 900,
+        temperature: 0.3,
+        // DeepSeek-style reasoning models answer faster with thinking off; other providers may reject the field.
+        ...(env.AI_THINKING === "off" ? { thinking: { type: "disabled" } } : {}),
+        messages: [{ role: "system", content: system }, ...messages],
+      }),
       signal: ctrl.signal,
     });
   } catch {

@@ -23,22 +23,37 @@ function inline(text: string): ReactNode[] {
     part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : part.startsWith("`") && part.endsWith("`") ? <code key={i}>{part.slice(1, -1)}</code> : part,
   );
 }
+const BULLET = /^\s*([-*•]|\d+[.)])\s+/;
+
+// Group lines into paragraphs and lists, so "Causes:\n- a\n- b" renders as text then a list.
 function Rich({ text }: { text: string }) {
-  const blocks = text.trim().split(/\n{2,}/);
-  return (
-    <>
-      {blocks.map((b, i) => {
-        const lines = b.split("\n");
-        if (lines.every((l) => /^\s*([-*•]|\d+[.)])\s+/.test(l)))
-          return (
-            <ul key={i}>
-              {lines.map((l, j) => <li key={j}>{inline(l.replace(/^\s*([-*•]|\d+[.)])\s+/, ""))}</li>)}
-            </ul>
-          );
-        return <p key={i}>{lines.map((l, j) => <span key={j}>{j > 0 && <br />}{inline(l)}</span>)}</p>;
-      })}
-    </>
-  );
+  const out: ReactNode[] = [];
+  let para: string[] = [];
+  let list: string[] = [];
+  const flushPara = () => {
+    if (para.length) out.push(<p key={out.length}>{para.map((l, j) => <span key={j}>{j > 0 && <br />}{inline(l)}</span>)}</p>);
+    para = [];
+  };
+  const flushList = () => {
+    if (list.length) out.push(<ul key={out.length}>{list.map((l, j) => <li key={j}>{inline(l)}</li>)}</ul>);
+    list = [];
+  };
+  for (const raw of text.trim().split("\n")) {
+    const line = raw.replace(/^#{1,6}\s+/, "");
+    if (!line.trim()) {
+      flushPara();
+      flushList();
+    } else if (BULLET.test(line)) {
+      flushPara();
+      list.push(line.replace(BULLET, ""));
+    } else {
+      flushList();
+      para.push(line);
+    }
+  }
+  flushPara();
+  flushList();
+  return <>{out}</>;
 }
 
 export function Assistant() {
