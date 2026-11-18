@@ -1,5 +1,5 @@
 /* app shell */
-.shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+.shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; overflow-x: clip; }
 .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 6px; padding: 18px 14px calc(16px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); border-right: 1px solid var(--rule); background: var(--paper-2); }
 .side-top { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 10px; }
 .side-logo { text-decoration: none; }
@@ -177,7 +177,7 @@
 .card-btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); border-color: var(--ink); }
 .card-btn:hover::before, .card-btn.on::before { transform: scaleX(1); }
 .card-btn.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.card-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+.card-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; padding-right: 38px; }
 .card-btn:has(.s-matched) { --c: var(--s-matched); } .card-btn:has(.s-unmatched_a) { --c: var(--s-unmatched_a); } .card-btn:has(.s-amount_mismatch) { --c: var(--s-amount_mismatch); } .card-btn:has(.s-unmatched_b) { --c: var(--s-unmatched_b); } .card-btn:has(.s-duplicate) { --c: var(--s-duplicate); }
 .card-num { font-family: var(--mono); font-size: 30px; font-weight: 500; letter-spacing: -0.04em; line-height: 1.15; }
 .card-hint { font-size: 12px; color: var(--muted); }
@@ -314,6 +314,7 @@
   .sidebar > :not(.side-top) { display: none; }
   .shell.nav-open .sidebar > :not(.side-top) { display: grid; }
   .shell.nav-open .side-foot { display: grid; margin-top: 8px; }
+  .shell.nav-open .sidebar > .workspace, .shell.nav-open .sidebar > .side-cta { display: flex; }
   .side-link.active::before { display: none; }
   .page { padding: 24px max(16px, env(safe-area-inset-right, 0px)) 56px max(16px, env(safe-area-inset-left, 0px)); }
   .review-strip { grid-template-columns: minmax(0, 1fr); gap: 12px; }
