@@ -1,4 +1,4 @@
-// Fake kane-cli for tests. FAKE_KANE=pass|fail|infra; each call is logged to FAKE_KANE_LOG.
+// Fake kane-cli for tests. FAKE_KANE=pass|fail|infra|env; each call is logged to FAKE_KANE_LOG.
 import { appendFileSync } from "node:fs";
 
 const mode = process.env.FAKE_KANE ?? "pass";
@@ -17,6 +17,10 @@ if (mode === "infra") {
   process.exit(1);
 }
 out({ step: 3, status: "failed", remark: "assert: total is 39" });
+if (mode === "env") {
+  out({ type: "run_end", status: "failed", reason: "Could not load the page", verdict: { status: "broken", family: "environment_issue", root_cause: "The app server was not reachable", confidence: 0.8 }, context: { memory: {} } });
+  process.exit(1);
+}
 out({
   type: "run_end",
   status: "failed",
@@ -24,6 +28,7 @@ out({
   reason: 'Final verification failed: "total is 39"',
   credits_consumed: 12,
   context: { memory: { total: { condition: "total is 39", expected_value: "39", extracted_value: "0", reasoning: "value '0' equals '39' -> FAIL" } } },
+  verdict: { status: "failed", family: "application_issue", root_cause: "Amounts are parsed wrong", suggestion: "Check number formats", confidence: 0.96 },
 });
 process.stderr.write("evidence: view locally with `kane-cli evidence serve C:\\tmp\\pack.evidence`\n");
 process.exit(1);

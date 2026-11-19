@@ -58,12 +58,14 @@ export async function hook() {
     return;
   }
 
-  // Only browser/tooling errors? Don't send Claude after a bug that isn't there.
+  // Only tooling errors, or failures Kane itself blames on the environment? Don't send Claude after a bug that isn't there.
   if (!results.some((r) => r.status !== "passed" && !r.infra)) {
     writeState(config.root, state);
     const n = results.filter((r) => r.infra).length;
-    log(`${n} spec(s) could not run (browser/tooling error) — not blocking Claude`);
-    emit({ systemMessage: `kane-gate ! Kane could not complete ${n} spec(s) because of a browser/tooling error (not an app failure). Run \`npx kane-gate run\` to re-check.` });
+    const blamed = results.find((r) => r.infra && r.diagnosis)?.diagnosis;
+    const why = blamed ? `Kane triaged it as ${blamed.family}, not an app bug` : "a browser/tooling error, not an app failure";
+    log(`${n} spec(s) could not run (${why}) — not blocking Claude`);
+    emit({ systemMessage: `kane-gate ! Kane could not complete ${n} spec(s): ${why}. Run \`npx kane-gate run\` to re-check.` });
     return;
   }
 
