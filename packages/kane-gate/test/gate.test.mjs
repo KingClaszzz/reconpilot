@@ -65,6 +65,16 @@ test("failing spec blocks Claude with Kane's findings", async () => {
   assert.match(out.reason, /expected "39", observed "0"/);
   assert.match(out.reason, /evidence serve C:\\tmp\\pack\.evidence$/m);
   assert.match(out.reason, /Fix the APPLICATION code/);
+  assert.match(out.reason, /Kane's diagnosis \(application_issue, confidence 0\.96\): "Amounts are parsed wrong"/);
+  assert.match(out.reason, /Kane suggests: "Check number formats"/);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test("a failure Kane blames on the environment does not send Claude after a bug", async () => {
+  freshProject();
+  const out = await hook("env");
+  assert.equal(out.decision, undefined);
+  assert.match(out.systemMessage, /triaged it as environment_issue, not an app bug/);
   rmSync(dir, { recursive: true, force: true });
 });
 

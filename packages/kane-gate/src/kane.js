@@ -95,8 +95,10 @@ export function runSpec(spec, config, onEvent = () => {}) {
       if (buf) handle(buf);
       const evidenceMatch = stderr.match(/kane-cli evidence serve ([^\s`'"]+)/);
       let status = runEnd?.status === "passed" && code === 0 ? "passed" : runEnd ? "failed" : "error";
-      // died in the browser, not on an assertion: says nothing about the app
-      const infra = status !== "passed" && !steps.some((s) => s.status === "failed") && INFRA_ERROR.test(`${runEnd?.reason ?? ""} ${stderr}`);
+      const verdict = runEnd?.verdict;
+      // Kane triages its own failures; only an application_issue is worth sending the agent after
+      const notApp = verdict?.family && verdict.family !== "application_issue";
+      const infra = status !== "passed" && (notApp || (!steps.some((s) => s.status === "failed") && INFRA_ERROR.test(`${runEnd?.reason ?? ""} ${stderr}`)));
       if (infra) status = "error";
       resolvePromise({
         spec: spec.id,
@@ -111,6 +113,7 @@ export function runSpec(spec, config, onEvent = () => {}) {
         reason: runEnd?.reason ?? (status === "error" ? stderr.trim().split(/\r?\n/).slice(-5).join("\n") : null),
         finalState: runEnd?.final_state ?? null,
         checks: checksFrom(runEnd),
+        diagnosis: verdict?.root_cause ? { family: verdict.family, rootCause: verdict.root_cause, suggestion: verdict.suggestion ?? null, confidence: verdict.confidence ?? null } : null,
         steps,
         evidence: evidenceMatch?.[1] ?? evidence,
         sessionDir: runEnd?.session_dir ?? null,
