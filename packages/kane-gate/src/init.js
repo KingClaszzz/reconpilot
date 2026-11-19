@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, appendFileSync } from "node:fs";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import { CONFIG_FILE, DEFAULTS } from "./config.js";
 import { colors as c } from "./verify.js";
 
-const HOOK_COMMAND = "npx --no-install kane-gate hook";
+const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const CLAUDE_MD_MARK = "<!-- kane-gate -->";
 
 const CLAUDE_MD_SECTION = `
@@ -77,14 +77,27 @@ export function init(root = process.cwd()) {
   } catch {
     /* new file */
   }
+  // Node projects get kane-gate as a devDependency so the hook never downloads anything;
+  // anything else runs a pinned version through npx.
+  const pkgFile = join(root, "package.json");
+  const pkg = existsSync(pkgFile) ? JSON.parse(readFileSync(pkgFile, "utf8")) : null;
   settings.hooks ??= {};
   settings.hooks.Stop ??= [];
   const already = JSON.stringify(settings.hooks.Stop).includes("kane-gate hook");
   if (already) done.push(c.dim("• Claude Code Stop hook already installed"));
   else {
-    settings.hooks.Stop.push({ hooks: [{ type: "command", command: HOOK_COMMAND, timeout: 1800 }] });
+    const command = pkg ? "npx --no-install kane-gate hook" : `npx -y kane-gate@${version} hook`;
+    settings.hooks.Stop.push({ hooks: [{ type: "command", command, timeout: 1800 }] });
     writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
     done.push(c.green("✓ installed Claude Code Stop hook in .claude/settings.json"));
+  }
+  if (pkg && !{ ...pkg.dependencies, ...pkg.devDependencies }["kane-gate"] && !pkg.workspaces) {
+    try {
+      execSync(`npm install --save-dev kane-gate@${version}`, { cwd: root, stdio: "ignore" });
+      done.push(c.green("✓ added kane-gate to devDependencies"));
+    } catch {
+      done.push(c.red("! couldn't add kane-gate to devDependencies, run: npm install -D kane-gate"));
+    }
   }
 
   const claudeMd = join(root, "CLAUDE.md");

@@ -51,7 +51,13 @@ npm install -g @testmuai/kane-cli
 kane-cli login
 ```
 
-kane-gate isn't on npm yet. This repo already has it wired up. To use it in another project, `npm link` the `packages/kane-gate` folder, then run `kane-gate init` in your project. That adds:
+Then, in your project:
+
+```bash
+npx kane-gate init
+```
+
+That adds:
 
 | File | What it's for |
 | --- | --- |
