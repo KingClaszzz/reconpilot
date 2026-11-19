@@ -1,29 +1,40 @@
 {
   "name": "kane-gate",
   "version": "0.1.0",
-  "description": "Your AI coding agent can't say \"done\" until Kane CLI proves it works in a real browser.",
+  "description": "A Claude Code Stop hook: the agent can't say \"done\" until Kane CLI verifies your specs in a real browser.",
+  "keywords": [
+    "kane-cli",
+    "claude-code",
+    "claude",
+    "hooks",
+    "stop-hook",
+    "ai-agent",
+    "e2e",
+    "browser-testing",
+    "verification"
+  ],
+  "homepage": "https://github.com/KingClaszzz/reconpilot#readme",
+  "bugs": {
+    "url": "https://github.com/KingClaszzz/reconpilot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KingClaszzz/reconpilot.git",
+    "directory": "packages/kane-gate"
+  },
+  "license": "MIT",
   "type": "module",
   "bin": {
     "kane-gate": "bin/kane-gate.js"
   },
   "files": [
     "bin",
-    "src",
-    "templates"
+    "src"
   ],
-  "scripts": {
-    "test": "node --test test/*.test.mjs"
-  },
   "engines": {
     "node": ">=18"
   },
-  "keywords": [
-    "kane-cli",
-    "claude-code",
-    "hooks",
-    "testing",
-    "ai-agent",
-    "verification"
-  ],
-  "license": "MIT"
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
 }
