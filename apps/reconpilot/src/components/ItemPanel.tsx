@@ -79,8 +79,10 @@ export function ItemPanel({ item, run, onClose, onChange }: { item: Item; run: R
   const toast = useToast();
   const [note, setNote] = useState(item.note ?? "");
   const [busy, setBusy] = useState<Resolution | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => setNote(item.note ?? ""), [item.id, item.note]);
+  useEffect(() => setCopied(false), [item.id]);
   useEffect(() => {
     closeBtn.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -90,6 +92,15 @@ export function ItemPanel({ item, run, onClose, onChange }: { item: Item; run: R
 
   const locked = run?.status === "closed";
   const isException = item.status !== "matched";
+
+  async function copyRef() {
+    try {
+      await navigator.clipboard.writeText(item.ref);
+      setCopied(true);
+    } catch (e) {
+      toast(errMsg(e), "err");
+    }
+  }
 
   async function act(resolution: Resolution) {
     setBusy(resolution);
@@ -115,7 +126,10 @@ export function ItemPanel({ item, run, onClose, onChange }: { item: Item; run: R
               <StatusChip status={item.status} />
               {isException && <ResolutionChip r={item.resolution} />}
             </div>
-            <h2 id="panel-title" className="mono">{item.ref}</h2>
+            <div className="panel-ref">
+              <h2 id="panel-title" className="mono">{item.ref}</h2>
+              <button type="button" className="text-btn" onClick={copyRef}>{copied ? "Copied" : "Copy reference"}</button>
+            </div>
             {run && <p className="panel-run">{run.name}</p>}
           </div>
           <button ref={closeBtn} type="button" className="icon-btn" onClick={onClose} aria-label="Close details">

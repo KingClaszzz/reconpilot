@@ -43,12 +43,18 @@ export function detectColumns(headers: string[]): Record<string, string | undefi
 
 // "inv-1001 " and "INV-1001" should match.
 export function normalizeRef(raw: string): string {
-  return raw.replace(/\s+/g, " ").toUpperCase();
+  return raw.trim().replace(/\s+/g, " ").toUpperCase();
 }
 
 // Handles "1.250.000,00", "1,250,000.00" and "1250000.00".
 export function parseAmount(raw: string): number | null {
-  const n = parseFloat(raw.replace(/[^0-9.,-]/g, "").replace(/,/g, ""));
+  let s = raw.replace(/[^0-9.,-]/g, "");
+  const lastComma = s.lastIndexOf(","), lastDot = s.lastIndexOf(".");
+  // The later separator is the decimal one; a lone comma followed by 1–2 digits is decimal too ("6,50").
+  const commaDecimal = lastComma > lastDot && (lastDot >= 0 || /,\d{1,2}$/.test(s));
+  s = commaDecimal ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+  if (!commaDecimal && (s.match(/\./g) ?? []).length > 1) s = s.replace(/\./g, ""); // "1.250.000"
+  const n = parseFloat(s);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -72,7 +78,7 @@ export function parseDate(raw: string, order: DateOrder = "dmy"): string | null 
   if (match) {
     [y, m, d] = [Number(match[1]), Number(match[2]), Number(match[3])];
   } else if ((match = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/))) {
-    [m, d, y] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    [d, m, y] = [Number(match[1]), Number(match[2]), Number(match[3])];
     if (order === "mdy") [d, m] = [m, d];
     if (y < 100) y += 2000;
   } else if ((named = s.match(/^(\d{1,2})[\s\-]+([a-z]{3})[a-z]*\.?[\s\-,]+(\d{4})$/i))) {

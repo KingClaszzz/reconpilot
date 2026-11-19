@@ -196,6 +196,7 @@
 .panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; width: min(560px, 100%); background: var(--card); border-left: 1px solid var(--ink); overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: calc(22px + env(safe-area-inset-top, 0px)) max(26px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 26px; box-shadow: -24px 0 60px -20px rgb(0 0 0 / 0.25); animation: slide 0.3s var(--ease) both; }
 .panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .panel-chips { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.panel-ref { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .panel-head h2 { margin: 12px 0 2px; font-size: 26px; font-weight: 500; letter-spacing: -0.03em; }
 .panel-run { font-size: 13px; color: var(--muted); }
 .explain { color: var(--ink-2); max-width: 54ch; }
