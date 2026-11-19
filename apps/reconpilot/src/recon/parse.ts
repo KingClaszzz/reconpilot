@@ -43,41 +43,13 @@ export function detectColumns(headers: string[]): Record<string, string | undefi
 
 // "inv-1001 " and "INV-1001" should match.
 export function normalizeRef(raw: string): string {
-  return raw.trim().replace(/\s+/g, " ").toUpperCase();
+  return raw.replace(/\s+/g, " ").toUpperCase();
 }
 
 // Handles "1.250.000,00", "1,250,000.00" and "1250000.00".
 export function parseAmount(raw: string): number | null {
-  let s = raw.trim().replace(/^(rp\.?|usd|idr|eur|sgd|us\$|s\$|\$|€|£)/i, "").replace(/\s/g, "");
-  let negative = false;
-  if (/^\(.*\)$/.test(s)) {
-    negative = true;
-    s = s.slice(1, -1);
-  }
-  if (s.startsWith("-")) {
-    negative = true;
-    s = s.slice(1);
-  }
-  if (!/^[\d.,]+$/.test(s)) return null;
-
-  const lastDot = s.lastIndexOf(".");
-  const lastComma = s.lastIndexOf(",");
-  let normalized: string;
-  if (lastDot >= 0 && lastComma >= 0) {
-    // whichever separator comes last is the decimal one
-    normalized = lastComma > lastDot ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
-  } else if (lastComma >= 0) {
-    // "1250,5" -> decimal; "1,250,000" -> thousands
-    normalized = /^\d+,\d{1,2}$/.test(s) ? s.replace(",", ".") : s.replace(/,/g, "");
-  } else if (lastDot >= 0) {
-    // "1.250.000" or "1.250" -> thousands; "1250.50" -> decimal
-    normalized = /^\d{1,3}(\.\d{3})+$/.test(s) ? s.replace(/\./g, "") : s;
-  } else {
-    normalized = s;
-  }
-  const n = Number(normalized);
-  if (!Number.isFinite(n)) return null;
-  return negative ? -n : n;
+  const n = parseFloat(raw.replace(/[^0-9.,-]/g, "").replace(/,/g, ""));
+  return Number.isFinite(n) ? n : null;
 }
 
 // Bank-style "1,625.00 CR" / "6.50 DB" (also D/K, DR): debits are money out.
@@ -100,7 +72,7 @@ export function parseDate(raw: string, order: DateOrder = "dmy"): string | null 
   if (match) {
     [y, m, d] = [Number(match[1]), Number(match[2]), Number(match[3])];
   } else if ((match = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/))) {
-    [d, m, y] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    [m, d, y] = [Number(match[1]), Number(match[2]), Number(match[3])];
     if (order === "mdy") [d, m] = [m, d];
     if (y < 100) y += 2000;
   } else if ((named = s.match(/^(\d{1,2})[\s\-]+([a-z]{3})[a-z]*\.?[\s\-,]+(\d{4})$/i))) {
