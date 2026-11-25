@@ -42,14 +42,8 @@ export function Logo({ compact = false, height = 24 }: { compact?: boolean; heig
   );
 }
 
-export function Mascot({ className = "", size = 160, eager = false }: { className?: string; size?: number; eager?: boolean }) {
-  return (
-    <picture className={`mascot ${className}`}>
-      <source srcSet="/brand/mascot.webp" type="image/webp" />
-      <img src="/brand/mascot.png" alt="" width={size} height={Math.round(size * 1.17)} loading={eager ? "eager" : "lazy"} decoding="async" />
-    </picture>
-  );
-}
+import { Mascot } from "./Mascot";
+export { Mascot };
 
 export function PageHead({ eyebrow, title, sub, actions }: { eyebrow?: ReactNode; title: string; sub?: ReactNode; actions?: ReactNode }) {
   return (
@@ -105,7 +99,7 @@ export function RunStatusChip({ s }: { s: RunStatus }) {
 export function Empty({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="empty">
-      <Mascot className="empty-mascot" size={110} />
+      <Mascot className="empty-mascot" size={110} interactive />
       <h3>{title}</h3>
       {children && <p>{children}</p>}
       {action}

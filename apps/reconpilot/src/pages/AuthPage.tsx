@@ -127,7 +127,7 @@ export default function AuthPage({ mode }: { mode: "login" | "signup" }) {
             <p key={i} style={{ animationDelay: `${i * 120}ms` }}>{l}</p>
           ))}
         </div>
-        <Mascot className="auth-mascot" size={150} />
+        <Mascot className="auth-mascot" size={150} interactive />
         <div className="auth-note">
           <p>Month-end shouldn’t be two days of VLOOKUP.</p>
           <span>ReconPilot turns two exports into a short list of lines that need a person, each closed with a note.</span>

@@ -359,7 +359,7 @@ export default function Landing() {
 
       <section className="section final">
         <div className="wrap final-in">
-          <Mascot className="final-mascot" size={140} />
+          <Mascot className="final-mascot" size={140} interactive />
           <h2>See November reconciled in a minute.</h2>
           <p>The demo workspace has two bank accounts and three months of history. Nothing to install.</p>
           <div className="hero-cta">
