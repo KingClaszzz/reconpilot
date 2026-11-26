@@ -9,3 +9,8 @@ dist/
 .testmuai/
 .env.local
 *.local
+
+# local notes and personal Claude settings
+docs/PRD.md
+.claude/settings.local.json
+.claude/worktrees/
