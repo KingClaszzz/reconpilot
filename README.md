@@ -250,6 +250,7 @@ erDiagram
 | [`assistant`](.kane/specs/assistant.md) | the assistant opens and answers about the current page |
 | [`expired-email-link`](.kane/specs/expired-email-link.md) | an expired confirmation link explains itself and offers a new email |
 | [`kane-section`](.kane/specs/kane-section.md) | the landing page shows this loop and its code |
+| [`templates`](.kane/specs/templates.md) | New reconciliation offers bank and ERP templates to download |
 | [`mascot`](.kane/specs/mascot.md) | the mascot answers when clicked |
 
 ## Commands
@@ -269,7 +270,7 @@ You upload a bank statement and an ERP ledger export, as CSV or Excel. ReconPilo
 
 "Try the live demo" logs you into a demo workspace with two bank accounts and three months of history.
 
-Ten Kane specs cover it, from the landing page to resolving an exception and asking the assistant a question (list in [Proof](#proof)).
+Eleven Kane specs cover it, from the landing page to resolving an exception and asking the assistant a question (list in [Proof](#proof)).
 
 ### Real bank files
 
@@ -281,6 +282,8 @@ Bank exports are messy, so the parser handles what they actually look like:
 - references buried in the description ("TRF PT KENCANA MAS INV-1004")
 - `1,625.00`, `1.625,00` and `$1,625.00`
 - day/month vs month/day, worked out per file. When a file doesn't make it clear, the app says so and lets you switch.
+
+If you'd rather fill in a sheet, New reconciliation has bank and ERP templates (.xlsx and .csv). Uploaded unchanged, they give one of each result type.
 
 `apps/reconpilot/public/samples` has the same transactions in three formats. All three must reconcile to the same numbers, and Kane checks that.
 

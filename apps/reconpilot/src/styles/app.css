@@ -346,3 +346,4 @@
 .file-notes li.warn-note::before { content: "!"; color: var(--warn); }
 .file-notes .text-btn { font-size: 12.5px; }
 .samples-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+a.hint { display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }

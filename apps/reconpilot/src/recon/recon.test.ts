@@ -120,3 +120,25 @@ describe("export", () => {
     expect(csv).toContain(",-5,");
   });
 });
+
+describe("download templates", () => {
+  const tdir = join(__dirname, "../../public/templates");
+  const xlsx = async (name: string) => {
+    const buf = readFileSync(join(tdir, name));
+    return parseTable(await readSheet(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)));
+  };
+  const expected = { matched: 2, amount_mismatch: 1, unmatched_a: 1, unmatched_b: 1, duplicate: 0 };
+
+  it("csv templates reconcile to one of each result", () => {
+    const [bank, erp] = ["bank", "erp"].map((n) => parseCsv(readFileSync(join(tdir, `reconpilot-${n}-template.csv`), "utf8")));
+    expect(bank.missing).toEqual([]);
+    expect(reconcile(bank.txns, erp.txns).counts).toEqual(expected);
+  });
+
+  it("xlsx templates read the Transactions sheet and give the same result", async () => {
+    const bank = await xlsx("reconpilot-bank-template.xlsx");
+    const erp = await xlsx("reconpilot-erp-template.xlsx");
+    expect(bank.txns[0]).toMatchObject({ date: "2026-11-03", ref: "INV-2001", amount: 1250 });
+    expect(reconcile(bank.txns, erp.txns).counts).toEqual(expected);
+  });
+});

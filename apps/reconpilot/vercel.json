@@ -1,5 +1,5 @@
 {
-  "rewrites": [{ "source": "/((?!api/|assets/|samples/|brand/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!api/|assets/|samples/|templates/|brand/).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",

@@ -148,6 +148,15 @@ export default function NewRun() {
               <button type="button" className="hint" onClick={() => loadSamples("mutasi-rekening.csv")} data-testid="sample-internet-banking">Internet banking CSV</button>
               <button type="button" className="hint" onClick={() => loadSamples("bank-statement.xlsx")} data-testid="sample-xlsx">Excel workbook (.xlsx)</button>
             </div>
+            <div className="samples-row" data-testid="templates">
+              <span>Templates:</span>
+              {["bank", "erp"].flatMap((side) => ["xlsx", "csv"].map((ext) => (
+                <a key={side + ext} className="hint" href={`/templates/reconpilot-${side}-template.${ext}`} download>
+                  <Icon name="download" size={13} /> {side === "bank" ? "Bank" : "ERP"} (.{ext})
+                </a>
+              )))}
+              <span className="muted small">Optional. Your bank's own export works as it is.</span>
+            </div>
             {[...missing, ...empty].map((m) => (
               <p key={m} className="warn">⚠ {m}. Rename the header or export again.</p>
             ))}
