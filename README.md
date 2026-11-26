@@ -96,6 +96,162 @@ Things that keep it from getting in the way:
 - Text from the page is treated as data. A page can't sneak instructions into Claude's prompt.
 - If kane-gate itself crashes, Claude can still stop.
 
+## Why it has to be Kane
+
+The bugs in the story above passed every unit test. They only show up when a real bank file goes through the real upload screen and someone reads the numbers on the page. That is what Kane does, and nothing else in the loop can.
+
+- **It reads plain English.** A spec is what a finance person would check by hand. There are no selectors, so when Claude restyles a page there is nothing for it to "fix" in the test.
+- **It uses the app.** Kane clicks, uploads and reads the screen in Chrome. The spec above clicks the same buttons a person would.
+- **It explains what it saw.** Each failure comes back with expected and observed values, and with Kane's own verdict: `application_issue`, `environment_issue` or `automation_bug`, a root cause, a suggestion and a confidence. kane-gate forwards that to Claude, so it starts from "wrong number format, 0.97" instead of guessing.
+- **It triages itself.** Only an `application_issue` blocks the agent. A flaky browser or a Kane hiccup is retried and reported to you, not dumped on Claude as a bug to chase.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  you["You<br/>give Claude a task"] --> claude["Claude Code<br/>edits the app"]
+  claude -- "tries to stop" --> hook["kane-gate hook<br/>Stop hook"]
+  hook -- "starts the app if needed" --> app
+  hook -- "one spec per run<br/>kane-cli run --agent" --> kane["Kane CLI<br/>real Chrome"]
+  kane -- "clicks, uploads, reads" --> app["ReconPilot<br/>Vite + React"]
+  kane -- "NDJSON: checks, verdict, diagnosis" --> hook
+  hook -- "all passed: allow" --> done(["turn ends"])
+  hook -- "application_issue: block<br/>with findings" --> claude
+  hook -- "env or automation issue:<br/>retry, report, don't blame the code" --> done
+  hook --> hist[(".kane/runs<br/>history + HTML report")]
+```
+
+### One blocked stop, step by step
+
+```mermaid
+sequenceDiagram
+  participant C as Claude Code
+  participant G as kane-gate
+  participant K as Kane CLI
+  participant A as App in Chrome
+  C->>G: Stop (wants to end the turn)
+  G->>G: tree unchanged since last green? then allow
+  G->>G: spec files edited during a fix round? then call it out
+  loop each spec in .kane/specs
+    G->>K: kane-cli run "<spec>" --agent
+    K->>A: click, upload, read the page
+    K-->>G: run_end: checks, verdict.family, root_cause, confidence
+  end
+  alt every spec passed
+    G-->>C: allow stop
+  else application_issue (attempt below maxAttempts)
+    G-->>C: block: expected vs observed + Kane's diagnosis
+    C->>C: fix the app, not the spec
+    C->>G: Stop again
+  else attempts used up
+    G-->>C: allow stop, list what is still broken
+  end
+```
+
+### The app
+
+```mermaid
+flowchart LR
+  user["Finance user"] --> ui["React app<br/>reconpilot-six.vercel.app"]
+  ui -- "bank + ERP files<br/>parsed in the browser" --> recon["parse.ts + match.ts"]
+  recon -- "matched lines only" --> db[("Supabase Postgres<br/>row-level security")]
+  ui -- "question + page context" --> fn["/api/assistant<br/>Vercel function"]
+  fn -- "server-side key" --> llm["OpenAI-compatible model"]
+  ui -. "no env vars" .-> local[("browser storage<br/>fallback")]
+```
+
+### Data model
+
+Every table carries `owner`, and row-level security limits every read and write to `auth.uid()`. The schema is [`apps/reconpilot/supabase/schema.sql`](apps/reconpilot/supabase/schema.sql).
+
+```mermaid
+erDiagram
+  USERS ||--o{ ACCOUNTS : owns
+  USERS ||--o{ RUNS : owns
+  USERS ||--o{ ACTIVITY : "writes (append-only)"
+  ACCOUNTS ||--o{ RUNS : "reconciled in"
+  RUNS ||--|{ RUN_ITEMS : contains
+  RUNS ||--o{ ACTIVITY : "logged against"
+
+  ACCOUNTS {
+    uuid id PK
+    uuid owner FK
+    text name
+    text bank
+    text last4 "last four digits only"
+    text currency "ISO code, e.g. USD"
+  }
+  RUNS {
+    uuid id PK
+    uuid account_id FK
+    text period "YYYY-MM"
+    text bank_file
+    text erp_file
+    jsonb counts "per status"
+    jsonb totals
+    int exceptions
+    int resolved "kept in sync by trigger"
+    text status "in_review or closed"
+    timestamptz closed_at
+  }
+  RUN_ITEMS {
+    uuid id PK
+    uuid run_id FK
+    text status "matched, amount_mismatch, unmatched_a, unmatched_b, duplicate"
+    text ref
+    jsonb a "bank line"
+    jsonb b "ERP line"
+    numeric diff
+    text resolution "auto, open, resolved, ignored"
+    text note
+  }
+  ACTIVITY {
+    uuid id PK
+    timestamptz at
+    text actor
+    text action
+    text target
+    uuid run_id FK
+  }
+```
+
+### Who can do what
+
+| | Can | Can't |
+| --- | --- | --- |
+| **Claude (coding agent)** | edit the app and its specs, read Kane's findings | end a turn while an `application_issue` is open, until `maxAttempts` runs out. Quietly edit a spec during a fix round: kane-gate points it out. |
+| **kane-gate** | start the app, run Kane, block or allow the stop, keep history | edit code. If it crashes, it lets Claude stop rather than trapping the session. |
+| **Kane CLI** | use the running app in Chrome and report what it saw | change anything. Page text it returns is treated as data, never as instructions to Claude. |
+| **A ReconPilot user** | see and change their own workspace | read anyone else's rows (RLS), edit items in a closed period, edit or delete the activity log |
+
+## What's real and what's staged
+
+| Real | Staged |
+| --- | --- |
+| Both Claude Code sessions in [`docs/loop-demo/`](docs/loop-demo/): headless runs, transcripts and gate logs as they came out, including turns, time and cost | The three parser bugs were planted on purpose (`npm run demo:break`) so the story is repeatable. Claude wasn't told about them. |
+| Every Kane result quoted here, and every row of [`docs/gate-history.md`](docs/gate-history.md) | The demo workspace data is seeded (Aug to Nov 2026) |
+| `kane-gate` on npm, installable with `npx kane-gate init` | The sample bank files are realistic but made up |
+| The live app, database, auth and assistant at reconpilot-six.vercel.app | |
+
+## Proof
+
+- 26 gate runs on this repo between 17 and 25 Nov: 9 from the Stop hook, the rest by hand. 79 spec runs passed, 5 failed and named the broken flow, 1 was a Kane login problem that kane-gate correctly didn't blame on the code. Full table: [`docs/gate-history.md`](docs/gate-history.md).
+- The loop: [`run2-readable.txt`](docs/loop-demo/run2-readable.txt), blocked once, fixed, 3 of 3 green, 33 turns, about 15 minutes, $0.73.
+- kane-gate's own tests: `npm test -w kane-gate`. The app's: `npm test -w reconpilot`.
+
+| Spec | What Kane checks |
+| --- | --- |
+| [`demo-login`](.kane/specs/demo-login.md) | the landing page opens the live demo workspace |
+| [`reconcile-summary`](.kane/specs/reconcile-summary.md) | the sample files give 39 matched, 3 mismatches, 2 only in bank, 3 only in ERP, 2 duplicates |
+| [`mismatch-detail`](.kane/specs/mismatch-detail.md) | a mismatch row shows both dates and a $50.00 difference |
+| [`bank-header-rows`](.kane/specs/bank-header-rows.md) | an internet-banking export with title rows and CR/DB amounts reconciles the same |
+| [`bank-xlsx`](.kane/specs/bank-xlsx.md) | the Excel statement gives the same result as the CSV |
+| [`resolve-exception`](.kane/specs/resolve-exception.md) | resolving an exception with a note moves review progress |
+| [`assistant`](.kane/specs/assistant.md) | the assistant opens and answers about the current page |
+| [`expired-email-link`](.kane/specs/expired-email-link.md) | an expired confirmation link explains itself and offers a new email |
+| [`kane-section`](.kane/specs/kane-section.md) | the landing page shows this loop and its code |
+| [`mascot`](.kane/specs/mascot.md) | the mascot answers when clicked |
+
 ## Commands
 
 | Command | |
@@ -113,7 +269,7 @@ You upload a bank statement and an ERP ledger export, as CSV or Excel. ReconPilo
 
 "Try the live demo" logs you into a demo workspace with two bank accounts and three months of history.
 
-Eight Kane specs cover it, from the landing page to resolving an exception and asking the assistant a question.
+Ten Kane specs cover it, from the landing page to resolving an exception and asking the assistant a question (list in [Proof](#proof)).
 
 ### Real bank files
 

@@ -4,6 +4,7 @@ import { useAuth } from "../lib/auth";
 import { errMsg, useToast } from "../lib/toast";
 import { CountUp, Decode, Reveal, reducedMotion, useInView } from "../lib/motion";
 import { Icon, Logo, Mascot } from "../components/ui";
+import { KaneProof } from "../components/KaneProof";
 
 export function DemoButton({ className = "btn primary lg", label = "Try the live demo" }: { className?: string; label?: string }) {
   const { startDemo } = useAuth();
@@ -190,6 +191,7 @@ export default function Landing() {
             <a href="#how">How it works</a>
             <a href="#system">Product</a>
             <a href="#security">Security</a>
+            <a href="#verified">Verified</a>
           </nav>
           <div className="lnav-cta">
             {user ? (
@@ -348,14 +350,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="section kane">
-        <div className="wrap kane-in">
-          <p className="eyebrow">QUALITY</p>
-          <p className="kane-line">
-            Every change to ReconPilot is tested by <b>Kane CLI</b> in a real browser before the coding agent is allowed to call it done.
-          </p>
-        </div>
-      </section>
+      <KaneProof />
 
       <section className="section final">
         <div className="wrap final-in">
