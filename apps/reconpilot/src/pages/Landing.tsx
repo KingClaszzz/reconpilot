@@ -367,7 +367,7 @@ export default function Landing() {
       <footer className="lfoot">
         <div className="wrap lfoot-in">
           <Logo />
-          <span className="muted">Bank ↔ ERP reconciliation · Made in Indonesia</span>
+          <span className="muted">Bank ↔ ERP reconciliation · Build By Arlor09</span>
         </div>
       </footer>
     </div>
